@@ -1,0 +1,58 @@
+.hero {
+    background-color: #008080;
+    color: #fff;
+}
+
+.hero .title {
+    color: #fff;
+}
+
+.hero .subtitle {
+    color: rgba(255,255,255,.9);
+}
+
+#hero {
+    min-height: 100vh;
+}
+
+#loader i.fa {
+    color: #fff;
+    font-size: 4rem;
+}
+
+#result, #entry, #error, #warning {
+    display: none;
+}
+
+#search-span {
+    font-weight: bold;
+}
+
+#references-content, #suppl-references {
+    font-size: .875rem;
+}
+
+#references-content ol > li, #suppl-references ol > li {
+    margin-bottom: 1rem;
+}
+
+.content a {
+    color: #0070bb;
+}
+
+.content a:hover, .content a:active, .content a:focus {
+    color: #005188;
+}
+
+dl > dd + dt {
+    margin-top: 1rem;
+}
+
+.level-item a {
+    color: #0070bb;
+}
+
+.field + .help {
+    margin-top: -.5rem;
+}
+
