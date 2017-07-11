@@ -11,6 +11,10 @@
     color: rgba(255,255,255,.9);
 }
 
+.hero-body {
+    padding: 0;
+}
+
 #hero {
     min-height: 100vh;
 }

@@ -112,7 +112,10 @@ $(function() {
             else
                 signaturesHTML += '<td>' + signature.method_ac + '</td>';
 
-            signaturesHTML += '<td>' + signature.name + '</td><td>' + signature.count + '</td></tr>';
+            signaturesHTML += '<td>' + signature.name + '</td><td>' + signature.count + '</td>' +
+                '<td><a href="http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load/interpro/curation/OverlappingQuerySignature.jelly?signature=' + signature.method_ac + '" target="_blank">Happy Helper <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></td></tr>';
+
+            //
         });
 
         var relationshipsHTML = '';
