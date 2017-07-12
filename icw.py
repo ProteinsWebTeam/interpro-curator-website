@@ -148,7 +148,7 @@ def get_entry(entry_ac):
                 "FROM INTERPRO.ENTRY E "
                 "INNER JOIN INTERPRO.CV_ENTRY_TYPE ET "
                 "ON E.ENTRY_TYPE = ET.CODE "
-                "RIGHT OUTER JOIN INTERPRO.MV_ENTRY_MATCH EM ON E.ENTRY_AC = EM.ENTRY_AC "
+                "LEFT OUTER JOIN INTERPRO.MV_ENTRY_MATCH EM ON E.ENTRY_AC = EM.ENTRY_AC "
                 "WHERE E.ENTRY_AC = :entry_ac ", entry_ac=entry_ac)
 
     row = cur.fetchone()
