@@ -185,6 +185,8 @@ $(function() {
         var loader = document.getElementById('loader');
         loader.className = 'modal is-active';
 
+        window.history.replaceState(null, '', '/' + searchQuery);
+
         $.getJSON($SCRIPT_ROOT + '/api/entry/' + searchQuery, function (data) {
             loader.className = 'modal';
 
