@@ -3,21 +3,24 @@ $(function() {
         var pubIDs = [];
         var references = [];
         var description = data.description;
+        var matches = description.match(/#(PUB\d+)/g);
 
-        description.match(/#(PUB\d+)/g).forEach(function (match) {
-            var pubID = match.substr(1);
-            var ref = data.references.hasOwnProperty(pubID) ? data.references[pubID] : null;
-            var newSubstr;
+        if (matches !== null) {
+            matches.forEach(function (match) {
+                var pubID = match.substr(1);
+                var ref = data.references.hasOwnProperty(pubID) ? data.references[pubID] : null;
+                var newSubstr;
 
-            if (pubIDs.indexOf(pubID) === -1 && ref !== null) {
-                pubIDs.push(pubID);
-                references.push(ref);
-                newSubstr = '<a href="#'+ pubID +'">' + references.length + '</a>';
-            } else
-                newSubstr = '';
+                if (pubIDs.indexOf(pubID) === -1 && ref !== null) {
+                    pubIDs.push(pubID);
+                    references.push(ref);
+                    newSubstr = '<a href="#'+ pubID +'">' + references.length + '</a>';
+                } else
+                    newSubstr = '';
 
-            description = description.replace(new RegExp(match, 'g'), newSubstr);
-        });
+                description = description.replace(new RegExp(match, 'g'), newSubstr);
+            });
+        }
 
         var regex = /\[XREF name="([^"]+)" url="([^"]*)"\]/g;
         var match = regex.exec(description);
