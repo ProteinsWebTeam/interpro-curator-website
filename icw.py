@@ -313,7 +313,7 @@ def get_entry(entry_ac):
                 desc = desc.replace(c, '')
 
             # Replace <cite id="PUBXXXX"/> by #PUBXXXX
-            desc = re.sub(r'<cite id="(PUB\d+)"/>', '#\\1', desc)
+            desc = re.sub(r'<cite\s+id="(PUB\d+)"\s*/>', '#\\1', desc)
 
             for m in re.finditer(r'<dbxref db="(\w+)" id="([\w\.]+)"\/>', desc):
                 match = m.group(0)
