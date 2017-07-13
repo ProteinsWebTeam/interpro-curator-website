@@ -291,8 +291,10 @@ def get_entry(entry_ac):
                     "  WHERE PDB.ENTRY_AC = :entry_ac"
                     ")", entry_ac=entry_ac)
 
-        cols = ['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors']
-        entry['references'] = {row[0]: dict(zip(cols, row)) for row in cur}
+        references = {row[0]: dict(zip(
+            ['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'],
+            row
+        )) for row in cur}
 
         # Description
         cur.execute("SELECT A.TEXT "
@@ -301,6 +303,7 @@ def get_entry(entry_ac):
                     "WHERE E.ENTRY_AC = :entry_ac "
                     "ORDER BY E.ORDER_IN", entry_ac=entry_ac)
 
+        missing_references = []
         for row in cur:
             # Trim paragraph tags (<p>, </p>)
             desc = row[0].lstrip('<p>').rstrip('</p>')
@@ -312,8 +315,13 @@ def get_entry(entry_ac):
             for c in ['\r', '\n']:
                 desc = desc.replace(c, '')
 
-            # Replace <cite id="PUBXXXX"/> by #PUBXXXX
-            desc = re.sub(r'<cite\s+id="(PUB\d+)"\s*/>', '#\\1', desc)
+            # Find references and replace <cite id="PUBXXXX"/> by #PUBXXXX
+            for m in re.finditer(r'<cite\s+id="(PUB\d+)"\s*/>', desc):
+                ref = m.group(1)
+                desc = desc.replace(m.group(0), '#' + ref)
+
+                if ref not in references:
+                    missing_references.append(ref)
 
             for m in re.finditer(r'<dbxref db="(\w+)" id="([\w\.]+)"\/>', desc):
                 match = m.group(0)
@@ -331,6 +339,29 @@ def get_entry(entry_ac):
                 desc = desc.replace(match, xref)
 
             entry['description'] += desc
+
+        missing_references = list(set(missing_references))
+
+        if missing_references:
+            # For some entries, the association entry-citation is missing in the INTERPRO.ENTRY2PUB
+            cur.execute(
+                "SELECT "
+                "  DISTINCT(C.PUB_ID), "
+                "  C.TITLE, "
+                "  C.YEAR, "
+                "  C.VOLUME, "
+                "  C.RAWPAGES, "
+                "  C.DOI_URL, "
+                "  C.PUBMED_ID, "
+                "  C.ISO_JOURNAL, "
+                "  C.AUTHORS "
+                "FROM INTERPRO.CITATION C "
+                "WHERE C.PUB_ID IN ({})".format(','.join([':' + str(i+1) for i in range(len(missing_references))])),
+                missing_references
+            )
+
+        references.update({row[0]: dict(zip(['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'], row)) for row in cur})
+        entry['references'] = references
 
     return entry
 
