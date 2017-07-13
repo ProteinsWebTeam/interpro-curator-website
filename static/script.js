@@ -6,14 +6,23 @@ $(function() {
         var matches = description.match(/#(PUB\d+)/g);
 
         if (matches !== null) {
+            var matchesUniques = [];
+
             matches.forEach(function (match) {
+                if (matchesUniques.indexOf(match) === -1)
+                    matchesUniques.push(match);
+            });
+
+            matchesUniques.forEach(function (match) {
                 var pubID = match.substr(1);
                 var ref = data.references.hasOwnProperty(pubID) ? data.references[pubID] : null;
                 var newSubstr;
 
-                if (pubIDs.indexOf(pubID) === -1 && ref !== null) {
-                    pubIDs.push(pubID);
-                    references.push(ref);
+                if (ref !== null) {
+                    if (pubIDs.indexOf(pubID) === -1) {
+                        pubIDs.push(pubID);
+                        references.push(ref);
+                    }
                     newSubstr = '<a href="#'+ pubID +'">' + references.length + '</a>';
                 } else
                     newSubstr = '';
