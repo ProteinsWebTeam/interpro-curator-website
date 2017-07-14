@@ -4,7 +4,7 @@
 import re
 
 import cx_Oracle
-from flask import Flask, g, jsonify, render_template
+from flask import Flask, g, jsonify, render_template, request
 
 
 app = Flask(__name__)
@@ -304,16 +304,13 @@ def get_entry(entry_ac):
                     "ORDER BY E.ORDER_IN", entry_ac=entry_ac)
 
         missing_references = []
+        description = ''
         for row in cur:
             # Trim paragraph tags (<p>, </p>)
             desc = row[0].lstrip('<p>').rstrip('</p>')
 
             # Add back tags
             desc = '<p>' + desc + '</p>'
-
-            # Remove \r and \n
-            for c in ['\r', '\n']:
-                desc = desc.replace(c, '')
 
             # Find references and replace <cite id="PUBXXXX"/> by #PUBXXXX
             for m in re.finditer(r'<cite\s+id="(PUB\d+)"\s*/>', desc):
@@ -330,15 +327,15 @@ def get_entry(entry_ac):
 
                 if db in XREF_DATABASES:
                     url = XREF_DATABASES[db].format(_id)
-                    xref = '[XREF name="{}" url="{}"]'.format(_id, url)
+                    xref = '<xref name="{}" url="{}"/>'.format(_id, url)
                 else:
-                    xref = '[XREF name="{}" url=""]'.format(_id)
+                    xref = '<xref name="{}" url=""/>'.format(_id)
                     entry['warning'] = ('At least one link for a cross-reference could not be generated. '
                                         'Please contact the production team.')
 
                 desc = desc.replace(match, xref)
 
-            entry['description'] += desc
+            description += desc
 
         missing_references = list(set(missing_references))
 
@@ -361,7 +358,14 @@ def get_entry(entry_ac):
             )
 
         references.update({row[0]: dict(zip(['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'], row)) for row in cur})
+
+        for block in re.findall(r'\[\s*#PUB\d+(?:\s*,\s*#PUB\d+)*\s*\]', description):
+            refs = re.findall(r'#(PUB\d+)', block)
+
+            description = description.replace(block, '<cite id="{}"/>'.format(','.join(refs)))
+
         entry['references'] = references
+        entry['description'] = description
 
     return entry
 
@@ -382,7 +386,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/<entry_ac>/')
+@app.route('/entry/<entry_ac>/')
 def entry_page(entry_ac):
     m = re.match(r'(?:IPR)?(\d+)$', entry_ac, re.I)
 
@@ -402,9 +406,14 @@ def api_entry(entry_ac):
     m = re.match(r'(?:IPR)?(\d+)$', entry_ac, re.I)
 
     if m:
-        entry_ac = 'IPR{:06d}'.format(int(m.group(1)))
+        return jsonify(get_entry('IPR{:06d}'.format(int(m.group(1)))))
+    else:
+        return jsonify({})  # todo add error message
 
-    return jsonify(get_entry(entry_ac))
+
+@app.route('/api/search/<query>')
+def api_search(query):
+    return jsonify(dict(query=query, results=None))
 
 
 if __name__ == '__main__':
