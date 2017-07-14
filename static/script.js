@@ -60,7 +60,7 @@ $(function() {
                 content += '<div class="level-item"><a href="' + ref.doi + '" target="_blank">View article <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
 
             if (ref.pmid)
-                content += '<div class="level-item"><a href="http://europepmc.org/abstract/MED/' + ref.pmid + '" target="_blank">PubMed <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
+                content += '<div class="level-item"><a href="http://europepmc.org/abstract/MED/' + ref.pmid + '" target="_blank">Europe PMC <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
 
             content += '</div></div></li>';
         });
@@ -80,7 +80,7 @@ $(function() {
                     content += '<div class="level-item"><a href="' + references[refID].doi + '" target="_blank">View article <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
 
                 if (references[refID].pmid)
-                    content += '<div class="level-item"><a href="http://europepmc.org/abstract/MED/' + references[refID].pmid + '" target="_blank">PubMed <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
+                    content += '<div class="level-item"><a href="http://europepmc.org/abstract/MED/' + references[refID].pmid + '" target="_blank">Europe PMC <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
 
                 content += '</div></div></li>';
             }
@@ -111,34 +111,34 @@ $(function() {
         });
 
         document.getElementById('signatures-content').innerHTML = content;
-        
+
         // Relationships block
         content = '';
         if (data.relationships.parents.length) {
             content += '<dt>Parents</dt>';
             data.relationships.parents.forEach(function (entry) {
-                content += '<dd><a href="/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
         if (data.relationships.children.length) {
             content += '<dt>Children</dt>';
             data.relationships.children.forEach(function (entry) {
-                content += '<dd><a href="/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
         if (data.relationships.containers.length) {
             content += '<dt>Found in</dt>';
             data.relationships.containers.forEach(function (entry) {
-                content += '<dd><a href="/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
         if (data.relationships.components.length) {
             content += '<dt>Contains</dt>';
             data.relationships.components.forEach(function (entry) {
-                content += '<dd><a href="/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
-        
+
         document.getElementById('relationships-content').innerHTML = content.length ? '<dl>' + content + '</dl>' : '<p>This entry has no relationships (but do well on its own).</p>';
 
         // GO terms block
@@ -157,37 +157,106 @@ $(function() {
         content += '<dt>Molecular Function</dt>' + (goTerms['F'].length ? goTerms['F'] : '<dd>No terms assigned in this category.</dd>');
         content += '<dt>Cellular Component</dt>' + (goTerms['C'].length ? goTerms['C'] : '<dd>No terms assigned in this category.</dd>') + '</dl>';
         document.getElementById('go-content').innerHTML = content;
-
-        if (data.warning !== null) {
-            document.querySelector('#warning .message-body').innerHTML = data.warning;
-            document.getElementById('warning').style.display = 'block';
-        } else
-            document.getElementById('warning').style.display = 'none';
-
-        document.getElementById('entry').style.display = 'block';
     };
 
-    var getEntry = function (searchQuery) {
+    var searchMethod = function (methodAc) {
         var loader = document.getElementById('loader');
         loader.className = 'modal is-active';
 
-        //window.history.replaceState(null, '', '/' + searchQuery);
-
-        $.getJSON($SCRIPT_ROOT + '/api/entry/' + searchQuery, function (data) {
+        $.getJSON($SCRIPT_ROOT + '/api/signature/' + methodAc, function (data) {
             loader.className = 'modal';
 
-            if (data.name === undefined || data.name === null) {
-                document.getElementById('search-span').innerHTML = searchQuery;
+            window.history.pushState(null, '', '/signature/' + methodAc);
+
+            if (data.warning !== undefined && data.warning !== null) {
+                document.querySelector('#warning .message-header').innerHTML = data.warning;
+                document.querySelector('#warning .message-body').innerHTML = data.message;
+                document.getElementById('warning').style.display = 'block';
+            } else
+                document.getElementById('warning').style.display = 'none';
+
+            if (data.error !== undefined && data.error !== null) {
+                document.querySelector('#error .message-header').innerHTML = data.error;
+                document.querySelector('#error .message-body').innerHTML = data.message;
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('entry').style.display = 'none';
-            } else
+            } else {
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('entry').style.display = 'block';
                 updateEntrySection(data);
+            }
 
             $('#hero').animate({
                 'min-height': null
             }, 'fast');
-            document.getElementById('result').style.display = 'block';
+        });
+    };
 
+    var searchEntry = function (entryAc) {
+        var loader = document.getElementById('loader');
+        loader.className = 'modal is-active';
+
+        $.getJSON($SCRIPT_ROOT + '/api/entry/' + entryAc, function (data) {
+            loader.className = 'modal';
+
+            window.history.pushState(null, '', '/entry/' + entryAc);
+
+            if (data.warning !== undefined && data.warning !== null) {
+                document.querySelector('#warning .message-header').innerHTML = data.warning;
+                document.querySelector('#warning .message-body').innerHTML = data.message;
+                document.getElementById('warning').style.display = 'block';
+            } else
+                document.getElementById('warning').style.display = 'none';
+
+            if (data.error !== undefined && data.error !== null) {
+                document.querySelector('#error .message-header').innerHTML = data.error;
+                document.querySelector('#error .message-body').innerHTML = data.message;
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('entry').style.display = 'none';
+            } else {
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('entry').style.display = 'block';
+                updateEntrySection(data);
+            }
+
+            $('#hero').animate({
+                'min-height': null
+            }, 'fast');
+        });
+    };
+
+    var searchText = function (text) {
+        var loader = document.getElementById('loader');
+        loader.className = 'modal is-active';
+
+        $.getJSON($SCRIPT_ROOT + '/api/search/' + text, function (data) {
+            loader.className = 'modal';
+
+            console.log(data);
+
+            // window.history.pushState(null, '', '/entry/' + entryAc);
+            //
+            // if (data.warning !== undefined && data.warning !== null) {
+            //     document.querySelector('#warning .message-header').innerHTML = data.warning;
+            //     document.querySelector('#warning .message-body').innerHTML = data.message;
+            //     document.getElementById('warning').style.display = 'block';
+            // } else
+            //     document.getElementById('warning').style.display = 'none';
+            //
+            // if (data.error !== undefined && data.error !== null) {
+            //     document.querySelector('#error .message-header').innerHTML = data.error;
+            //     document.querySelector('#error .message-body').innerHTML = data.message;
+            //     document.getElementById('error').style.display = 'block';
+            //     document.getElementById('entry').style.display = 'none';
+            // } else {
+            //     document.getElementById('error').style.display = 'none';
+            //     document.getElementById('entry').style.display = 'block';
+            //     updateEntrySection(data);
+            // }
+
+            $('#hero').animate({
+                'min-height': null
+            }, 'fast');
         });
     };
 
@@ -196,7 +265,7 @@ $(function() {
             var value = this.value.trim();
 
             if (value.length)
-                getEntry(value);
+                searchText(value);
         }
     });
 
@@ -204,7 +273,7 @@ $(function() {
         var value = document.getElementById('search-input').value.trim();
 
         if (value.length)
-            getEntry(value);
+            searchText(value);
     });
 
     $('#menu').on('click', 'a', function () {
@@ -214,17 +283,8 @@ $(function() {
         this.className = 'is-active';
     });
 
-    if (entry !== null) {
-        if (entry.name === undefined || entry.name === null) {
-            document.getElementById('search-span').innerHTML = entryAc;
-            document.getElementById('error').style.display = 'block';
-            document.getElementById('entry').style.display = 'none';
-        } else
-            updateEntrySection(entry);
-
-        $('#hero').animate({
-            'min-height': null
-        }, 'fast');
-        document.getElementById('result').style.display = 'block';
-    }
+    if (entryAc !== null) {
+        searchEntry(entryAc);
+    } else if (methodAc !== null)
+        searchMethod(methodAc);
 });

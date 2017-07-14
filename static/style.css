@@ -28,10 +28,6 @@
     display: none;
 }
 
-#search-span {
-    font-weight: bold;
-}
-
 #references-content, #suppl-references {
     font-size: .875rem;
 }

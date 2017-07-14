@@ -36,7 +36,7 @@
                         </p>
                     </div>
                     <p class="help">
-                        Example: <a href="/entry/IPR020405/">IPR020405</a>
+                        Examples: <a href="/entry/IPR020405/">IPR020405</a>, <a href="/signature/PF02171/">PF02171</a>
                     </p>
 
                 </div>
@@ -54,60 +54,68 @@
     <span class="sr-only">Loading&hellip;</span>
 </div>
 
-<section id="result" class="section">
+<section id="error" class="section">
     <div class="container">
-        <div id="error" class="message is-danger">
-            <div class="message-header">
-                <p><strong>Hum. That's embarrassing.</strong></p>
-            </div>
-            <div class="message-body">
-                Your search for <span id="search-span"></span> did not match any entry in the database.
-            </div>
+        <div class="message is-danger">
+            <div class="message-header"></div>
+            <div class="message-body"></div>
+        </div>
+    </div>
+</section>
+
+<section id="warning" class="section">
+    <div class="container">
+        <div class="message is-warning">
+            <div class="message-header"></div>
+            <div class="message-body"></div>
+        </div>
+    </div>
+</section>
+
+<section id="entry" class="section">
+    <div class="container">
+        <h1 class="title"></h1>
+        <h2 class="subtitle"></h2>
+
+        <div class="box">
+            <nav class="level">
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">UniProtKB Matches</p>
+                        <p id="protein-count" class="title"></p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Type</p>
+                        <p id="entry-type" class="title"></p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Signatures</p>
+                        <a href="#signatures" id="signature-count" class="title"></a>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">GO terms</p>
+                        <a href="#go" id="go-count" class="title"></a>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">References</p>
+                        <a href="#references" id="reference-count" class="title"></a>
+                    </div>
+                </div>
+            </nav>
         </div>
 
-        <div id="entry">
-            <h1 class="title"></h1>
-            <h2 class="subtitle"></h2>
-
-            <div class="box">
-                <nav class="level">
-                    <div class="level-item has-text-centered">
-                        <div>
-                            <p class="heading">UniProtKB Matches</p>
-                            <p id="protein-count" class="title"></p>
-                        </div>
-                    </div>
-                    <div class="level-item has-text-centered">
-                        <div>
-                            <p class="heading">Type</p>
-                            <p id="entry-type" class="title"></p>
-                        </div>
-                    </div>
-                    <div class="level-item has-text-centered">
-                        <div>
-                            <p class="heading">Signatures</p>
-                            <a href="#signatures" id="signature-count" class="title"></a>
-                        </div>
-                    </div>
-                    <div class="level-item has-text-centered">
-                        <div>
-                            <p class="heading">GO terms</p>
-                            <a href="#go" id="go-count" class="title"></a>
-                        </div>
-                    </div>
-                    <div class="level-item has-text-centered">
-                        <div>
-                            <p class="heading">References</p>
-                            <a href="#references" id="reference-count" class="title"></a>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-
-            <div class="columns">
-                <div class="column is-3">
-                    <div class="box">
-                        <aside id="menu" class="menu">
+        <div class="columns">
+            <div class="column is-3">
+                <div class="box">
+                    <aside id="menu" class="menu">
                         <ul class="menu-list">
                             <li><a href="#curation" class="is-active">Curation</a></li>
                             <li><a href="#description">Description</a></li>
@@ -117,104 +125,91 @@
                             <li><a href="#references" >References</a></li>
                         </ul>
                     </aside>
-                    </div>
-
                 </div>
-                <div class="column">
 
-                    <div id="warning" class="message is-warning">
-                        <div class="message-header">
-                            <p><strong>Something went wrong</strong></p>
-                        </div>
-                        <div class="message-body">
-
-                        </div>
-                    </div>
-
-                    <h3 id="curation" class="title">Curation</h3>
-                    <div id="curation-content" class="content">
-                        <dl>
-                            <dt>Public website</dt>
-                            <dd>
-                                <a target="_blank" data-href="http://www.ebi.ac.uk/interpro/entry/">Entry&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                            </dd>
-{#                            <dt>Happy Helper</dt>#}
-{#                            <dd>#}
-{#                                <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
-{#                            </dd>#}
-                            <dt>Talisman</dt>
-                            <dd class="left">
-                                <div class="level-left">
-                                    <div class="level-item">
-                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_entry.xml&url=ipro&ac=">Abstract&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                                    </div>
-                                    <div class="level-item">
-                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_reference/ref_manager.xml&url=IPRO&ac=">References&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                                    </div>
-                                    <div class="level-item">
-                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/new_relation.xml&url=IPRO&ac=">Relationship&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                                    </div>
-                                    <div class="level-item">
-                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/split2.xml&url=IPRO&ac=">Split&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                                    </div>
-                                    <div class="level-item">
-                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_interpro2go/interpro2go.xml&url=IPRO&ac=">InterPro2GO&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                                    </div>
-{#                                    <div class="level-item">#}
-{#                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_block.xml&url=ipro&ac=">Common annotations&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
-{#                                    </div>#}
+            </div>
+            <div class="column">
+                <h3 id="curation" class="title">Curation</h3>
+                <div id="curation-content" class="content">
+                    <dl>
+                        <dt>Public website</dt>
+                        <dd>
+                            <a target="_blank" data-href="http://www.ebi.ac.uk/interpro/entry/">Entry&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                        </dd>
+                        {#                            <dt>Happy Helper</dt>#}
+                        {#                            <dd>#}
+                        {#                                <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
+                        {#                            </dd>#}
+                        <dt>Talisman</dt>
+                        <dd class="left">
+                            <div class="level-left">
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_entry.xml&url=ipro&ac=">Abstract&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
-                            </dd>
-                        </dl>
-                    </div>
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_reference/ref_manager.xml&url=IPRO&ac=">References&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                </div>
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/new_relation.xml&url=IPRO&ac=">Relationship&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                </div>
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/split2.xml&url=IPRO&ac=">Split&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                </div>
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_interpro2go/interpro2go.xml&url=IPRO&ac=">InterPro2GO&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                </div>
+                                {#                                    <div class="level-item">#}
+                                {#                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_block.xml&url=ipro&ac=">Common annotations&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
+                                {#                                    </div>#}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
 
-                    <hr>
+                <hr>
 
-                    <h3 id="description" class="title">Description</h3>
-                    <div id="description-content" class="content"></div>
+                <h3 id="description" class="title">Description</h3>
+                <div id="description-content" class="content"></div>
 
-                    <hr>
+                <hr>
 
-                    <h3 id="signatures" class="title">Signatures</h3>
-                    <div class="content">
-                        <table class="table is-bordered is-striped">
-                            <thead>
-                            <tr>
-                                <th>Member database</th>
-                                <th>Accession</th>
-                                <th>Name</th>
-                                <th>Protein count</th>
-                                <th>Prediction</th>
-                            </tr>
-                            </thead>
-                            <tbody id="signatures-content"></tbody>
+                <h3 id="signatures" class="title">Signatures</h3>
+                <div class="content">
+                    <table class="table is-bordered is-striped">
+                        <thead>
+                        <tr>
+                            <th>Member database</th>
+                            <th>Accession</th>
+                            <th>Name</th>
+                            <th>Protein count</th>
+                            <th>Prediction</th>
+                        </tr>
+                        </thead>
+                        <tbody id="signatures-content"></tbody>
 
-                        </table>
-                    </div>
+                    </table>
+                </div>
 
-                    <hr>
+                <hr>
 
-                    <h3 id="relationships" class="title">InterPro relationships</h3>
-                    <div id="relationships-content" class="content"></div>
+                <h3 id="relationships" class="title">InterPro relationships</h3>
+                <div id="relationships-content" class="content"></div>
 
-                    <hr>
+                <hr>
 
-                    <h3 id="go" class="title">GO terms</h3>
-                    <div id="go-content" class="content">
-                    </div>
+                <h3 id="go" class="title">GO terms</h3>
+                <div id="go-content" class="content">
+                </div>
 
-                    <hr>
+                <hr>
 
-                    <h3 id="references" class="title">References</h3>
-                    <div id="references-content" class="content"></div>
+                <h3 id="references" class="title">References</h3>
+                <div id="references-content" class="content"></div>
 
-                    <h4 class="title">Supplementary references</h4>
-                    <div id="suppl-references" class="content">
-                    </div>
+                <h4 class="title">Supplementary references</h4>
+                <div id="suppl-references" class="content">
                 </div>
             </div>
-
-
         </div>
     </div>
 </section>
@@ -224,16 +219,15 @@
 <script type=text/javascript>
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 
-    {% if entry %}
-        var entry = {{ entry|tojson }};
-    {% else %}
-        var entry = null;
-    {% endif %}
-
-    {% if ac %}
-        var entryAc = "{{ ac }}";
+    {% if entry_ac %}
+        var entryAc = "{{ entry_ac }}";
+        var methodAc = null;
+    {% elif method_ac %}
+        var entryAc = null;
+        var methodAc = "{{ method_ac }}";
     {% else %}
         var entryAc = null;
+        var methodAc = null;
     {% endif %}
 </script>
 </body>

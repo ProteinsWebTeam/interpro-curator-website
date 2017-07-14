@@ -99,7 +99,7 @@ MEMBER_DATABASES = {
 
 XREF_DATABASES = {
     'EC': 'http://www.ebi.ac.uk/intenz/query?cmd=SearchEC&ec={}',
-    'INTERPRO': '/{}'
+    'INTERPRO': '/entry/{}'
 }
 
 
@@ -113,29 +113,19 @@ def open_db():
     return g.oracle_db
 
 
-def get_entry(entry_ac):
-    entry = {
-        'id': None,
-        'name': None,
-        'short_name': None,
-        'type': None,
-        'checked': None,
-        'count': None,
-        'created': None,
-        'modified': None,
-        'signatures': [],
-        'relationships': {
-            'parents': [],
-            'children': [],
-            'containers': [],
-            'components': [],
-        },
-        'go': [],
-        'description': '',
-        'references': [],
-        'warning': None
-    }
+def method_to_entry(method_ac):
+    cur = open_db().cursor()
+    cur.execute('SELECT E2M.ENTRY_AC '
+                'FROM INTERPRO.METHOD M '
+                'LEFT OUTER JOIN INTERPRO.ENTRY2METHOD E2M '
+                'ON M.METHOD_AC=E2M.METHOD_AC '
+                'WHERE M.METHOD_AC=:method_ac', method_ac=method_ac)
 
+    row = cur.fetchone()
+    return row[0] if row is not None else row
+
+
+def get_entry(entry_ac):
     cur = open_db().cursor()
     cur.execute("SELECT "
                 "  E.NAME, "
@@ -153,196 +143,134 @@ def get_entry(entry_ac):
 
     row = cur.fetchone()
 
-    if row:
-        entry['id'] = entry_ac
-        entry['name'] = row[0]
-        entry['short_name'] = row[1]
-        entry['type'] = row[2]
-        entry['checked'] = bool(row[3])
-        entry['count'] = row[4]
-        entry['created'] = row[5].strftime('%Y-%m-%d %H:%M:%S')
-        entry['modified'] = row[6].strftime('%Y-%m-%d %H:%M:%S')
+    if not row:
+        return None
 
-        # Signature
-        cur.execute("SELECT M.DBCODE, M.METHOD_AC, M.NAME, NVL(MM.PROTEIN_COUNT, 0) "
-                    "FROM INTERPRO.METHOD M "
-                    "INNER JOIN INTERPRO.ENTRY2METHOD E2M ON M.METHOD_AC = E2M.METHOD_AC "
-                    "RIGHT OUTER JOIN INTERPRO.MV_METHOD_MATCH MM ON M.METHOD_AC = MM.METHOD_AC "
-                    "WHERE E2M.ENTRY_AC = :entry_ac ORDER BY M.METHOD_AC", entry_ac=entry_ac)
+    entry = {
+        'id': entry_ac,
+        'name': row[0],
+        'short_name': row[1],
+        'type': row[2],
+        'checked': bool(row[3]),
+        'count': row[4],
+        'created': row[5].strftime('%Y-%m-%d %H:%M:%S'),
+        'modified': row[6].strftime('%Y-%m-%d %H:%M:%S'),
+        'signatures': [],
+        'relationships': {
+            'parents': [],
+            'children': [],
+            'containers': [],
+            'components': [],
+        },
+        'go': [],
+        'description': None,
+        'references': None
+    }
 
-        for row in cur:
-            dbcode = row[0]
-            method_ac = row[1]
-            name = row[2]
-            count = row[3]
+    # Signature
+    cur.execute("SELECT M.DBCODE, M.METHOD_AC, M.NAME, NVL(MM.PROTEIN_COUNT, 0) "
+                "FROM INTERPRO.METHOD M "
+                "INNER JOIN INTERPRO.ENTRY2METHOD E2M ON M.METHOD_AC = E2M.METHOD_AC "
+                "RIGHT OUTER JOIN INTERPRO.MV_METHOD_MATCH MM ON M.METHOD_AC = MM.METHOD_AC "
+                "WHERE E2M.ENTRY_AC = :entry_ac ORDER BY M.METHOD_AC", entry_ac=entry_ac)
 
-            dbname = None
-            home = None
-            link = None
+    for row in cur:
+        dbcode = row[0]
+        method_ac = row[1]
+        name = row[2]
+        count = row[3]
 
-            if dbcode in MEMBER_DATABASES:
-                db = MEMBER_DATABASES[dbcode]
-                dbname = db['name']
-                home = db['home']
+        dbname = None
+        home = None
+        link = None
 
-                if db['formatter'] is None:
-                    link = db['link'].format(method_ac)
-                else:
-                    link = db['link'].format(db['formatter'](method_ac))
+        if dbcode in MEMBER_DATABASES:
+            db = MEMBER_DATABASES[dbcode]
+            dbname = db['name']
+            home = db['home']
 
-            entry['signatures'].append({
-                'dbname': dbname,
-                'home': home,
-                'link': link,
-                'method_ac': method_ac,
-                'name': name,
-                'count': count
-            })
+            if db['formatter'] is None:
+                link = db['link'].format(method_ac)
+            else:
+                link = db['link'].format(db['formatter'](method_ac))
 
-        # Relationships
-        # Parents
-        cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
-                    "FROM INTERPRO.ENTRY E "
-                    "INNER JOIN INTERPRO.ENTRY2ENTRY EE "
-                    "ON EE.PARENT_AC = E.ENTRY_AC "
-                    "WHERE EE.ENTRY_AC = :entry_ac", entry_ac=entry_ac)
+        entry['signatures'].append({
+            'dbname': dbname,
+            'home': home,
+            'link': link,
+            'method_ac': method_ac,
+            'name': name,
+            'count': count
+        })
 
-        for row in cur:
-            entry['relationships']['parents'].append({
-                'ac': row[0],
-                'name': row[1],
-                'checked': bool(row[2])
-            })
+    # Relationships
+    # Parents
+    cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
+                "FROM INTERPRO.ENTRY E "
+                "INNER JOIN INTERPRO.ENTRY2ENTRY EE "
+                "ON EE.PARENT_AC = E.ENTRY_AC "
+                "WHERE EE.ENTRY_AC = :entry_ac", entry_ac=entry_ac)
 
-        # Children
-        cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
-                    "FROM INTERPRO.ENTRY E "
-                    "INNER JOIN INTERPRO.ENTRY2ENTRY EE "
-                    "ON EE.ENTRY_AC = E.ENTRY_AC "
-                    "WHERE EE.PARENT_AC = :entry_ac", entry_ac=entry_ac)
+    for row in cur:
+        entry['relationships']['parents'].append({
+            'ac': row[0],
+            'name': row[1],
+            'checked': bool(row[2])
+        })
 
-        for row in cur:
-            entry['relationships']['children'].append({
-                'ac': row[0],
-                'name': row[1],
-                'checked': bool(row[2])
-            })
+    # Children
+    cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
+                "FROM INTERPRO.ENTRY E "
+                "INNER JOIN INTERPRO.ENTRY2ENTRY EE "
+                "ON EE.ENTRY_AC = E.ENTRY_AC "
+                "WHERE EE.PARENT_AC = :entry_ac", entry_ac=entry_ac)
 
-        # Containers
-        cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
-                    "FROM INTERPRO.ENTRY E "
-                    "INNER JOIN INTERPRO.ENTRY2COMP EC "
-                    "ON EC.ENTRY1_AC = E.ENTRY_AC "
-                    "WHERE EC.ENTRY2_AC = :entry_ac", entry_ac=entry_ac)
+    for row in cur:
+        entry['relationships']['children'].append({
+            'ac': row[0],
+            'name': row[1],
+            'checked': bool(row[2])
+        })
 
-        for row in cur:
-            entry['relationships']['containers'].append({
-                'ac': row[0],
-                'name': row[1],
-                'checked': bool(row[2])
-            })
+    # Containers
+    cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
+                "FROM INTERPRO.ENTRY E "
+                "INNER JOIN INTERPRO.ENTRY2COMP EC "
+                "ON EC.ENTRY1_AC = E.ENTRY_AC "
+                "WHERE EC.ENTRY2_AC = :entry_ac", entry_ac=entry_ac)
 
-        # Components
-        cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
-                    "FROM INTERPRO.ENTRY E "
-                    "INNER JOIN INTERPRO.ENTRY2COMP EC "
-                    "ON EC.ENTRY2_AC = E.ENTRY_AC "
-                    "WHERE EC.ENTRY1_AC = :entry_ac", entry_ac=entry_ac)
+    for row in cur:
+        entry['relationships']['containers'].append({
+            'ac': row[0],
+            'name': row[1],
+            'checked': bool(row[2])
+        })
 
-        for row in cur:
-            entry['relationships']['components'].append({
-                'ac': row[0],
-                'name': row[1],
-                'checked': bool(row[2])
-            })
+    # Components
+    cur.execute("SELECT E.ENTRY_AC, E.NAME, E.CHECKED "
+                "FROM INTERPRO.ENTRY E "
+                "INNER JOIN INTERPRO.ENTRY2COMP EC "
+                "ON EC.ENTRY2_AC = E.ENTRY_AC "
+                "WHERE EC.ENTRY1_AC = :entry_ac", entry_ac=entry_ac)
 
-        # GO annotations
-        cur.execute("SELECT G.CATEGORY, G.GO_ID, G.NAME "
-                    "FROM GO.TERMS@GOAPRO G "
-                    "INNER JOIN INTERPRO.INTERPRO2GO I2G ON G.GO_ID = I2G.GO_ID "
-                    "WHERE I2G.ENTRY_AC = :entry_ac "
-                    "ORDER BY G.CATEGORY, G.GO_ID", entry_ac=entry_ac)
+    for row in cur:
+        entry['relationships']['components'].append({
+            'ac': row[0],
+            'name': row[1],
+            'checked': bool(row[2])
+        })
 
-        entry['go'] = [dict(zip(['category', 'id', 'name'], row)) for row in cur]
+    # GO annotations
+    cur.execute("SELECT G.CATEGORY, G.GO_ID, G.NAME "
+                "FROM GO.TERMS@GOAPRO G "
+                "INNER JOIN INTERPRO.INTERPRO2GO I2G ON G.GO_ID = I2G.GO_ID "
+                "WHERE I2G.ENTRY_AC = :entry_ac "
+                "ORDER BY G.CATEGORY, G.GO_ID", entry_ac=entry_ac)
 
-        # References
-        cur.execute("SELECT "
-                    "  DISTINCT(C.PUB_ID), "
-                    "  C.TITLE, "
-                    "  C.YEAR, "
-                    "  C.VOLUME, "
-                    "  C.RAWPAGES, "
-                    "  C.DOI_URL, "
-                    "  C.PUBMED_ID, "
-                    "  C.ISO_JOURNAL, "
-                    "  C.AUTHORS "
-                    "FROM INTERPRO.CITATION C "
-                    "WHERE C.PUB_ID IN ("
-                    "  SELECT E2P.PUB_ID "
-                    "  FROM INTERPRO.ENTRY2PUB E2P "
-                    "  WHERE E2P.ENTRY_AC = :entry_ac "
-                    "  UNION "
-                    "  SELECT M.PUB_ID "
-                    "  FROM INTERPRO.METHOD2PUB M, INTERPRO.ENTRY2METHOD E "
-                    "  WHERE E.ENTRY_AC = :entry_ac AND E.METHOD_AC = M.METHOD_AC "
-                    "  UNION "
-                    "  SELECT PDB.PUB_ID "
-                    "  FROM INTERPRO.PDB_PUB_ADDITIONAL PDB "
-                    "  WHERE PDB.ENTRY_AC = :entry_ac"
-                    ")", entry_ac=entry_ac)
+    entry['go'] = [dict(zip(['category', 'id', 'name'], row)) for row in cur]
 
-        references = {row[0]: dict(zip(
-            ['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'],
-            row
-        )) for row in cur}
-
-        # Description
-        cur.execute("SELECT A.TEXT "
-                    "FROM INTERPRO.COMMON_ANNOTATION A "
-                    "INNER JOIN INTERPRO.ENTRY2COMMON E ON A.ANN_ID = E.ANN_ID "
-                    "WHERE E.ENTRY_AC = :entry_ac "
-                    "ORDER BY E.ORDER_IN", entry_ac=entry_ac)
-
-        missing_references = []
-        description = ''
-        for row in cur:
-            # Trim paragraph tags (<p>, </p>)
-            desc = row[0].lstrip('<p>').rstrip('</p>')
-
-            # Add back tags
-            desc = '<p>' + desc + '</p>'
-
-            # Find references and replace <cite id="PUBXXXX"/> by #PUBXXXX
-            for m in re.finditer(r'<cite\s+id="(PUB\d+)"\s*/>', desc):
-                ref = m.group(1)
-                desc = desc.replace(m.group(0), '#' + ref)
-
-                if ref not in references:
-                    missing_references.append(ref)
-
-            for m in re.finditer(r'<dbxref db="(\w+)" id="([\w\.]+)"\/>', desc):
-                match = m.group(0)
-                db = m.group(1)
-                _id = m.group(2)
-
-                if db in XREF_DATABASES:
-                    url = XREF_DATABASES[db].format(_id)
-                    xref = '<xref name="{}" url="{}"/>'.format(_id, url)
-                else:
-                    xref = '<xref name="{}" url=""/>'.format(_id)
-                    entry['warning'] = ('At least one link for a cross-reference could not be generated. '
-                                        'Please contact the production team.')
-
-                desc = desc.replace(match, xref)
-
-            description += desc
-
-        missing_references = list(set(missing_references))
-
-        if missing_references:
-            # For some entries, the association entry-citation is missing in the INTERPRO.ENTRY2PUB
-            cur.execute(
-                "SELECT "
+    # References
+    cur.execute("SELECT "
                 "  DISTINCT(C.PUB_ID), "
                 "  C.TITLE, "
                 "  C.YEAR, "
@@ -353,19 +281,96 @@ def get_entry(entry_ac):
                 "  C.ISO_JOURNAL, "
                 "  C.AUTHORS "
                 "FROM INTERPRO.CITATION C "
-                "WHERE C.PUB_ID IN ({})".format(','.join([':' + str(i+1) for i in range(len(missing_references))])),
-                missing_references
-            )
+                "WHERE C.PUB_ID IN ("
+                "  SELECT E2P.PUB_ID "
+                "  FROM INTERPRO.ENTRY2PUB E2P "
+                "  WHERE E2P.ENTRY_AC = :entry_ac "
+                "  UNION "
+                "  SELECT M.PUB_ID "
+                "  FROM INTERPRO.METHOD2PUB M, INTERPRO.ENTRY2METHOD E "
+                "  WHERE E.ENTRY_AC = :entry_ac AND E.METHOD_AC = M.METHOD_AC "
+                "  UNION "
+                "  SELECT PDB.PUB_ID "
+                "  FROM INTERPRO.PDB_PUB_ADDITIONAL PDB "
+                "  WHERE PDB.ENTRY_AC = :entry_ac"
+                ")", entry_ac=entry_ac)
 
-        references.update({row[0]: dict(zip(['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'], row)) for row in cur})
+    references = {row[0]: dict(zip(
+        ['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'],
+        row
+    )) for row in cur}
 
-        for block in re.findall(r'\[\s*#PUB\d+(?:\s*,\s*#PUB\d+)*\s*\]', description):
-            refs = re.findall(r'#(PUB\d+)', block)
+    # Description
+    cur.execute("SELECT A.TEXT "
+                "FROM INTERPRO.COMMON_ANNOTATION A "
+                "INNER JOIN INTERPRO.ENTRY2COMMON E ON A.ANN_ID = E.ANN_ID "
+                "WHERE E.ENTRY_AC = :entry_ac "
+                "ORDER BY E.ORDER_IN", entry_ac=entry_ac)
 
-            description = description.replace(block, '<cite id="{}"/>'.format(','.join(refs)))
+    missing_references = []
+    description = ''
+    for row in cur:
+        # Trim paragraph tags (<p>, </p>)
+        desc = row[0].lstrip('<p>').rstrip('</p>')
 
-        entry['references'] = references
-        entry['description'] = description
+        # Add back tags
+        desc = '<p>' + desc + '</p>'
+
+        # Find references and replace <cite id="PUBXXXX"/> by #PUBXXXX
+        for m in re.finditer(r'<cite\s+id="(PUB\d+)"\s*/>', desc):
+            ref = m.group(1)
+            desc = desc.replace(m.group(0), '#' + ref)
+
+            if ref not in references:
+                missing_references.append(ref)
+
+        for m in re.finditer(r'<dbxref db="(\w+)" id="([\w\.]+)"\/>', desc):
+            match = m.group(0)
+            db = m.group(1)
+            _id = m.group(2)
+
+            if db in XREF_DATABASES:
+                url = XREF_DATABASES[db].format(_id)
+                xref = '<xref name="{}" url="{}"/>'.format(_id, url)
+            else:
+                xref = '<xref name="{}" url=""/>'.format(_id)
+                entry['warning'] = "Hum. That's embarrassing"
+                entry['message'] = ('At least one link for a cross-reference could not be generated. '
+                                    'Please contact the production team.')
+
+            desc = desc.replace(match, xref)
+
+        description += desc
+
+    missing_references = list(set(missing_references))
+
+    if missing_references:
+        # For some entries, the association entry-citation is missing in the INTERPRO.ENTRY2PUB
+        cur.execute(
+            "SELECT "
+            "  DISTINCT(C.PUB_ID), "
+            "  C.TITLE, "
+            "  C.YEAR, "
+            "  C.VOLUME, "
+            "  C.RAWPAGES, "
+            "  C.DOI_URL, "
+            "  C.PUBMED_ID, "
+            "  C.ISO_JOURNAL, "
+            "  C.AUTHORS "
+            "FROM INTERPRO.CITATION C "
+            "WHERE C.PUB_ID IN ({})".format(','.join([':' + str(i+1) for i in range(len(missing_references))])),
+            missing_references
+        )
+
+    references.update({row[0]: dict(zip(['id', 'title', 'year', 'volume', 'pages', 'doi', 'pmid', 'journal', 'authors'], row)) for row in cur})
+
+    for block in re.findall(r'\[\s*#PUB\d+(?:\s*,\s*#PUB\d+)*\s*\]', description):
+        refs = re.findall(r'#(PUB\d+)', block)
+
+        description = description.replace(block, '<cite id="{}"/>'.format(','.join(refs)))
+
+    entry['references'] = references
+    entry['description'] = description
 
     return entry
 
@@ -388,12 +393,12 @@ def index():
 
 @app.route('/entry/<entry_ac>/')
 def entry_page(entry_ac):
-    m = re.match(r'(?:IPR)?(\d+)$', entry_ac, re.I)
+    return render_template('index.html', entry_ac=entry_ac)
 
-    if m:
-        entry_ac = 'IPR{:06d}'.format(int(m.group(1)))
 
-    return render_template('index.html', entry=get_entry(entry_ac), ac=entry_ac)
+@app.route('/signature/<method_ac>/')
+def signature_page(method_ac):
+    return render_template('index.html', method_ac=method_ac)
 
 
 @app.route('/api/')
@@ -401,19 +406,67 @@ def api_root():
     return "Ain't nobody here but us chickens"
 
 
+@app.route('/api/search/<text>/')
+def api_search(text):
+    m = re.match(r'(?:IPR)?(\d+)$', text, re.I)
+
+    if m:
+        entry_ac = 'IPR{:06d}'.format(int(m.group(1)))
+        entry = get_entry(entry_ac)
+
+        if entry:
+            entry['url'] = '/api/entry/' + entry['id']
+            return jsonify({
+                'type': 'entry',
+                'entry': entry
+            })
+        else:
+            return jsonify(dict(
+                error="<p><strong>Keep on looking.</strong></p>",
+                message="Your search for <strong>{}</strong> did not match any entry in the database.".format(entry_ac)
+            ))
+
+    entry_ac = method_to_entry(text)
+    if entry_ac:
+        entry = get_entry(entry_ac)
+        entry['url'] = '/api/signature/' + text
+        return jsonify({
+            'type': 'signature',
+            'entry': entry
+        })
+
+
 @app.route('/api/entry/<entry_ac>/')
 def api_entry(entry_ac):
     m = re.match(r'(?:IPR)?(\d+)$', entry_ac, re.I)
 
     if m:
-        return jsonify(get_entry('IPR{:06d}'.format(int(m.group(1)))))
+        entry = get_entry('IPR{:06d}'.format(int(m.group(1))))
     else:
-        return jsonify({})  # todo add error message
+        entry = None
+
+    if entry:
+        entry['url'] = '/api/entry/' + entry['id']
+        return jsonify(entry)
+    else:
+        return jsonify(dict(
+            error="<p><strong>Keep on looking.</strong></p>",
+            message="Your search for <strong>{}</strong> did not match any entry in the database.".format(entry_ac)
+        ))
 
 
-@app.route('/api/search/<query>')
-def api_search(query):
-    return jsonify(dict(query=query, results=None))
+@app.route('/api/signature/<method_ac>/')
+def api_signature(method_ac):
+    entry_ac = method_to_entry(method_ac)
+    if entry_ac:
+        entry = get_entry(entry_ac)
+        entry['url'] = '/api/signature/' + method_ac
+        return jsonify(entry)
+    else:
+        return jsonify(dict(
+            error="<p><strong>Keep on looking.</strong></p>",
+            message="Your search for <strong>{}</strong> did not match any signature in the database.".format(method_ac)
+        ))
 
 
 if __name__ == '__main__':
