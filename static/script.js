@@ -213,7 +213,7 @@ $(function() {
                 window.history.pushState(null, '', data.url);
 
             if (data.error !== undefined && data.error !== null) {
-                if (data.error === 'no_found') {
+                if (data.error === 'not_found') {
                     document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
                     document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + text + '</strong> did not match any record in the database.';
                 }
