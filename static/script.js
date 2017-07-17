@@ -1,17 +1,23 @@
 $(function() {
-    var updateEntrySection = function (data) {
-        document.getElementById('error').style.display = 'none';
-        document.querySelector('#entry .title').innerHTML = data.id;
-        document.querySelector('#entry .subtitle').innerHTML = data.name + ' (' + data.short_name + ')';
+    var updateEntrySection = function (entry) {
+        document.querySelector('#entry .title').innerHTML = entry.id;
+        document.querySelector('#entry .subtitle').innerHTML = entry.name + ' (' + entry.short_name + ')';
+
+        if (entry.missing_xref) {
+            document.querySelector('#warning .message-header').innerHTML = "<p><strong>Hum. That's embarrassing</strong></p>";
+            document.querySelector('#warning .message-body').innerHTML = '<p>At least one link for a cross-reference could not be generated. Please contact the production team.</p>';
+            document.getElementById('warning').style.display = 'block';
+        } else
+            document.getElementById('warning').style.display = 'none';
 
         // Curation block
         document.querySelectorAll('#curation-content a').forEach(function (el) {
-            el.href = el.getAttribute('data-href') + data.id;
+            el.href = el.getAttribute('data-href') + entry.id;
         });
 
         // Description block
-        var description = data.description;
-        var references = data.references;
+        var description = entry.description;
+        var references = entry.references;
         var orderedRefs = [];
         var re = /<cite id="([A-Z0-9,]+)"\/>/g;
         var arr;
@@ -42,10 +48,10 @@ $(function() {
         document.getElementById('description-content').innerHTML = description;
 
         // Header block (depends on references so not updated before)
-        document.getElementById('protein-count').innerHTML = data.count;
-        document.getElementById('entry-type').innerHTML = data.type;
-        document.getElementById('signature-count').innerHTML = data.signatures.length;
-        document.getElementById('go-count').innerHTML = data.go.length;
+        document.getElementById('protein-count').innerHTML = entry.count;
+        document.getElementById('entry-type').innerHTML = entry.type.replace('_', ' ');
+        document.getElementById('signature-count').innerHTML = entry.signatures.length;
+        document.getElementById('go-count').innerHTML = entry.go.length;
         document.getElementById('reference-count').innerHTML = orderedRefs.length;
 
         // References block
@@ -90,7 +96,7 @@ $(function() {
 
         // Signatures table
         content = '';
-        data.signatures.forEach(function (s) {
+        entry.signatures.forEach(function (s) {
             content += '<tr>';
 
             if (s.home)
@@ -114,27 +120,27 @@ $(function() {
 
         // Relationships block
         content = '';
-        if (data.relationships.parents.length) {
+        if (entry.relationships.parents.length) {
             content += '<dt>Parents</dt>';
-            data.relationships.parents.forEach(function (entry) {
+            entry.relationships.parents.forEach(function (entry) {
                 content += '<dd><a href="/entry/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
-        if (data.relationships.children.length) {
+        if (entry.relationships.children.length) {
             content += '<dt>Children</dt>';
-            data.relationships.children.forEach(function (entry) {
+            entry.relationships.children.forEach(function (entry) {
                 content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
-        if (data.relationships.containers.length) {
+        if (entry.relationships.containers.length) {
             content += '<dt>Found in</dt>';
-            data.relationships.containers.forEach(function (entry) {
+            entry.relationships.containers.forEach(function (entry) {
                 content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
-        if (data.relationships.components.length) {
+        if (entry.relationships.components.length) {
             content += '<dt>Contains</dt>';
-            data.relationships.components.forEach(function (entry) {
+            entry.relationships.components.forEach(function (entry) {
                 content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
@@ -148,7 +154,7 @@ $(function() {
             'C': ''
         };
 
-        data.go.forEach(function (term) {
+        entry.go.forEach(function (term) {
             if (goTerms.hasOwnProperty(term.category))
                 goTerms[term.category] += '<dd>' + '<a href="http://www.ebi.ac.uk/QuickGO/GTerm?id=' + term.id + '" target="_blank">' + term.id + ' <span class="icon is-small"><i class="fa fa-external-link"></i></span></a>&nbsp;' + term.name + '</dd>';
         });
@@ -159,64 +165,34 @@ $(function() {
         document.getElementById('go-content').innerHTML = content;
     };
 
-    var searchMethod = function (methodAc) {
-        var loader = document.getElementById('loader');
-        loader.className = 'modal is-active';
-
-        $.getJSON($SCRIPT_ROOT + '/api/signature/' + methodAc, function (data) {
-            loader.className = 'modal';
-
-            window.history.pushState(null, '', '/signature/' + methodAc);
-
-            if (data.warning !== undefined && data.warning !== null) {
-                document.querySelector('#warning .message-header').innerHTML = data.warning;
-                document.querySelector('#warning .message-body').innerHTML = data.message;
-                document.getElementById('warning').style.display = 'block';
-            } else
-                document.getElementById('warning').style.display = 'none';
-
-            if (data.error !== undefined && data.error !== null) {
-                document.querySelector('#error .message-header').innerHTML = data.error;
-                document.querySelector('#error .message-body').innerHTML = data.message;
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('entry').style.display = 'none';
-            } else {
-                document.getElementById('error').style.display = 'none';
-                document.getElementById('entry').style.display = 'block';
-                updateEntrySection(data);
-            }
-
-            $('#hero').animate({
-                'min-height': null
-            }, 'fast');
+    var updateEntriesSection = function (entries) {
+        var content = '';
+        entries.forEach(function (entry) {
+            content += '<tr><td><a href="/entry/' + entry.id + '">' + entry.id + '</a></td><td>' + entry.name + '</td><td>' + entry.type.replace('_', ' ') + '</td></tr>';
         });
+
+        document.querySelector('#entries tbody').innerHTML = content;
     };
 
-    var searchEntry = function (entryAc) {
+    var searchEntry = function (accession, url) {
         var loader = document.getElementById('loader');
         loader.className = 'modal is-active';
 
-        $.getJSON($SCRIPT_ROOT + '/api/entry/' + entryAc, function (data) {
+        $.getJSON($SCRIPT_ROOT + url + accession, function (data) {
             loader.className = 'modal';
 
-            window.history.pushState(null, '', '/entry/' + entryAc);
-
-            if (data.warning !== undefined && data.warning !== null) {
-                document.querySelector('#warning .message-header').innerHTML = data.warning;
-                document.querySelector('#warning .message-body').innerHTML = data.message;
-                document.getElementById('warning').style.display = 'block';
-            } else
-                document.getElementById('warning').style.display = 'none';
+            window.history.pushState(null, '', data.url);
 
             if (data.error !== undefined && data.error !== null) {
-                document.querySelector('#error .message-header').innerHTML = data.error;
-                document.querySelector('#error .message-body').innerHTML = data.message;
+                document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
+                document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + accession + '</strong> did not match any record in the database.';
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('entry').style.display = 'none';
             } else {
                 document.getElementById('error').style.display = 'none';
                 document.getElementById('entry').style.display = 'block';
-                updateEntrySection(data);
+
+                updateEntrySection(data.entry);
             }
 
             $('#hero').animate({
@@ -226,33 +202,40 @@ $(function() {
     };
 
     var searchText = function (text) {
+        text = text.trim();
         var loader = document.getElementById('loader');
         loader.className = 'modal is-active';
 
-        $.getJSON($SCRIPT_ROOT + '/api/search/' + text, function (data) {
+        $.getJSON($SCRIPT_ROOT + '/api/search/', {q: text}, function (data) {
             loader.className = 'modal';
 
-            console.log(data);
+            if (data.url !== undefined && data.url !== null)
+                window.history.pushState(null, '', data.url);
 
-            // window.history.pushState(null, '', '/entry/' + entryAc);
-            //
-            // if (data.warning !== undefined && data.warning !== null) {
-            //     document.querySelector('#warning .message-header').innerHTML = data.warning;
-            //     document.querySelector('#warning .message-body').innerHTML = data.message;
-            //     document.getElementById('warning').style.display = 'block';
-            // } else
-            //     document.getElementById('warning').style.display = 'none';
-            //
-            // if (data.error !== undefined && data.error !== null) {
-            //     document.querySelector('#error .message-header').innerHTML = data.error;
-            //     document.querySelector('#error .message-body').innerHTML = data.message;
-            //     document.getElementById('error').style.display = 'block';
-            //     document.getElementById('entry').style.display = 'none';
-            // } else {
-            //     document.getElementById('error').style.display = 'none';
-            //     document.getElementById('entry').style.display = 'block';
-            //     updateEntrySection(data);
-            // }
+            if (data.error !== undefined && data.error !== null) {
+                if (data.error === 'no_found') {
+                    document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
+                    document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + text + '</strong> did not match any record in the database.';
+                }
+
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('entry').style.display = 'none';
+                document.getElementById('entries').style.display = 'none';
+            } else if (data.type === 'entry') {
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('entry').style.display = 'block';
+                document.getElementById('entries').style.display = 'none';
+                updateEntrySection(data.entry);
+            } else if (data.type === 'entries') {
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('entry').style.display = 'none';
+                document.getElementById('entries').style.display = 'block';
+
+                document.querySelector('#entries .title').innerHTML = 'Search results';
+                document.querySelector('#entries .subtitle').innerHTML = data.entries.length + ' InterPro entries matching <strong>' + text + '</strong>';
+
+                updateEntriesSection(data.entries);
+            }
 
             $('#hero').animate({
                 'min-height': null
@@ -283,8 +266,10 @@ $(function() {
         this.className = 'is-active';
     });
 
-    if (entryAc !== null) {
-        searchEntry(entryAc);
-    } else if (methodAc !== null)
-        searchMethod(methodAc);
+    if (entryAc !== null)
+        searchEntry(entryAc, '/api/entry/');
+    else if (methodAc !== null)
+        searchEntry(methodAc, '/api/signature/');
+    else if (search !== null)
+        searchText(search);
 });

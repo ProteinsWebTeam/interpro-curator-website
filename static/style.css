@@ -24,7 +24,7 @@
     font-size: 4rem;
 }
 
-#result, #entry, #error, #warning {
+#result, #entry, #entries, #error, #warning {
     display: none;
 }
 

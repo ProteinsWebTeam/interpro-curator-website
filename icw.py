@@ -164,7 +164,8 @@ def get_entry(entry_ac):
         },
         'go': [],
         'description': None,
-        'references': None
+        'references': None,
+        'missing_xrefs': 0
     }
 
     # Signature
@@ -324,7 +325,7 @@ def get_entry(entry_ac):
             if ref not in references:
                 missing_references.append(ref)
 
-        for m in re.finditer(r'<dbxref db="(\w+)" id="([\w\.]+)"\/>', desc):
+        for m in re.finditer(r'<dbxref\s+db="(\w+)"\s+id="([\w\.]+)"\s*\/>', desc):
             match = m.group(0)
             db = m.group(1)
             _id = m.group(2)
@@ -333,10 +334,8 @@ def get_entry(entry_ac):
                 url = XREF_DATABASES[db].format(_id)
                 xref = '<xref name="{}" url="{}"/>'.format(_id, url)
             else:
-                xref = '<xref name="{}" url=""/>'.format(_id)
-                entry['warning'] = "Hum. That's embarrassing"
-                entry['message'] = ('At least one link for a cross-reference could not be generated. '
-                                    'Please contact the production team.')
+                entry['missing_xrefs'] += 1
+                xref = '<pre><xref name="{}" url=""/></pre>'.format(_id)
 
             desc = desc.replace(match, xref)
 
@@ -375,6 +374,56 @@ def get_entry(entry_ac):
     return entry
 
 
+def get_protein(protein_ac):
+    cur = open_db().cursor()
+    cur.execute('SELECT P.PROTEIN_AC '
+                'FROM INTERPRO.PROTEIN P '
+                'WHERE P.PROTEIN_AC = :protein_ac', protein_ac=protein_ac)
+
+    row = cur.fetchone()
+    return row[0] if row else None
+
+
+def search_entries(terms, fields=['abstract', 'common', 'entry', 'go', 'method', 'publication', 'xref']):
+    cur = open_db().cursor()
+
+    params = {}
+    field_cond = []
+    for i, field in enumerate(fields):
+        key = 'field_' + str(i + 1)
+        field_cond.append(':' + key)
+        params[key] = field.lower()
+
+    term_cond = []
+    for i, term in enumerate(terms):
+        key = 'term_' + str(i + 1)
+        term_cond.append('TEXT = :' + key)
+        params[key] = term.upper()
+
+    params['nterms'] = len(terms)
+
+    cur.execute(
+        'SELECT E.ENTRY_AC, E.NAME, ET.ABBREV '
+        'FROM INTERPRO.ENTRY E, ('
+        '  SELECT SQ.ID, SUM(SQ.CNT) CNT FROM ('
+        '    SELECT ID, TEXT, COUNT(*) CNT '
+        '    FROM INTERPRO.TEXT_INDEX_ENTRY '
+        '    WHERE FIELD IN ({}) AND ({}) '
+        '    GROUP BY ID, TEXT'
+        '  ) SQ '
+        '  GROUP BY SQ.ID '
+        '  HAVING COUNT(*) = :nterms'
+        ') S, '
+        'INTERPRO.CV_ENTRY_TYPE ET '
+        'WHERE E.ENTRY_AC = S.ID AND E.ENTRY_TYPE = ET.CODE '
+        'ORDER BY S.CNT DESC, E.ENTRY_AC ASC'.format(
+            ','.join(field_cond),
+            ' OR '.join(term_cond)
+        ), params)
+
+    return cur.fetchall()
+
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('404.html'), 404
@@ -401,13 +450,20 @@ def signature_page(method_ac):
     return render_template('index.html', method_ac=method_ac)
 
 
+@app.route('/search/')
+def search_page():
+    text = request.args.get('q', '').strip().strip('"\'')
+    return render_template('index.html', search=text)
+
+
 @app.route('/api/')
 def api_root():
     return "Ain't nobody here but us chickens"
 
 
-@app.route('/api/search/<text>/')
-def api_search(text):
+@app.route('/api/search/')
+def api_search():
+    text = request.args.get('q', '').strip().strip('"\'')
     m = re.match(r'(?:IPR)?(\d+)$', text, re.I)
 
     if m:
@@ -415,25 +471,41 @@ def api_search(text):
         entry = get_entry(entry_ac)
 
         if entry:
-            entry['url'] = '/api/entry/' + entry['id']
-            return jsonify({
-                'type': 'entry',
-                'entry': entry
-            })
-        else:
             return jsonify(dict(
-                error="<p><strong>Keep on looking.</strong></p>",
-                message="Your search for <strong>{}</strong> did not match any entry in the database.".format(entry_ac)
+                type='entry',
+                url='/entry/' + entry['id'],
+                entry=entry
             ))
 
     entry_ac = method_to_entry(text)
     if entry_ac:
         entry = get_entry(entry_ac)
-        entry['url'] = '/api/signature/' + text
-        return jsonify({
-            'type': 'signature',
-            'entry': entry
-        })
+        return jsonify(dict(
+            type='entry',
+            url='/signature/' + text,
+            entry=entry
+        ))
+
+    # protein_ac = get_protein(text)
+    # if protein_ac:
+    #     # todo return matches
+    #     return jsonify(dict(
+    #         type='protein',
+    #         url='/api/protein/' + protein_ac,
+    #         matches=[]
+    #     ))
+
+    entries = search_entries(text.split())
+    if entries:
+        return jsonify(dict(
+            type='entries',
+            url='/search?q="{}"'.format(text),
+            entries=[dict(zip(['id', 'name', 'type'], e)) for e in entries]
+        ))
+
+    return jsonify(dict(
+        error='not_found'
+    ))
 
 
 @app.route('/api/entry/<entry_ac>/')
@@ -446,12 +518,15 @@ def api_entry(entry_ac):
         entry = None
 
     if entry:
-        entry['url'] = '/api/entry/' + entry['id']
-        return jsonify(entry)
+        return jsonify(dict(
+            type='entry',
+            entry=entry,
+            url='/entry/' + entry['id']
+        ))
     else:
         return jsonify(dict(
-            error="<p><strong>Keep on looking.</strong></p>",
-            message="Your search for <strong>{}</strong> did not match any entry in the database.".format(entry_ac)
+            error="not_found",
+            url='/entry/' + entry_ac
         ))
 
 
@@ -460,12 +535,15 @@ def api_signature(method_ac):
     entry_ac = method_to_entry(method_ac)
     if entry_ac:
         entry = get_entry(entry_ac)
-        entry['url'] = '/api/signature/' + method_ac
-        return jsonify(entry)
+        return jsonify(dict(
+            type='entry',
+            entry=entry,
+            url='/signature/' + method_ac
+        ))
     else:
         return jsonify(dict(
-            error="<p><strong>Keep on looking.</strong></p>",
-            message="Your search for <strong>{}</strong> did not match any signature in the database.".format(method_ac)
+            error='not_found',
+            url='/signature/' + method_ac
         ))
 
 

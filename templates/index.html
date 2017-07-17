@@ -36,7 +36,7 @@
                         </p>
                     </div>
                     <p class="help">
-                        Examples: <a href="/entry/IPR020405/">IPR020405</a>, <a href="/signature/PF02171/">PF02171</a>
+                        Examples: <a href="/entry/IPR020405/">IPR020405</a>, <a href="/signature/PF02171/">PF02171</a>, <a href="/search?q=GO:0006915">GO:0006915</a>, <a href="/search?q=Ribosome">Ribosome</a>
                     </p>
 
                 </div>
@@ -136,15 +136,21 @@
                         <dd>
                             <a target="_blank" data-href="http://www.ebi.ac.uk/interpro/entry/">Entry&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                         </dd>
-                        {#                            <dt>Happy Helper</dt>#}
-                        {#                            <dd>#}
-                        {#                                <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
-                        {#                            </dd>#}
+{#                        <dt>Happy Helper</dt>#}
+{#                        <dd>#}
+{#                            <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
+{#                        </dd>#}
                         <dt>Talisman</dt>
                         <dd class="left">
                             <div class="level-left">
                                 <div class="level-item">
                                     <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_entry.xml&url=ipro&ac=">Abstract&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                </div>
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_interpro2go/interpro2go.xml&url=IPRO&ac=">InterPro2GO&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                </div>
+                                <div class="level-item">
+                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/merge.xml&url=IPRO&ac=">Merge&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 <div class="level-item">
                                     <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_reference/ref_manager.xml&url=IPRO&ac=">References&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
@@ -154,9 +160,6 @@
                                 </div>
                                 <div class="level-item">
                                     <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/split2.xml&url=IPRO&ac=">Split&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
-                                </div>
-                                <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_interpro2go/interpro2go.xml&url=IPRO&ac=">InterPro2GO&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 {#                                    <div class="level-item">#}
                                 {#                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_block.xml&url=ipro&ac=">Common annotations&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
@@ -214,6 +217,26 @@
     </div>
 </section>
 
+<section id="entries" class="section">
+    <div class="container">
+        <h1 class="title"></h1>
+        <h2 class="subtitle"></h2>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Entry</th>
+                <th>Name</th>
+                <th>Type</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</section>
+
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 <script type=text/javascript>
@@ -221,13 +244,20 @@
 
     {% if entry_ac %}
         var entryAc = "{{ entry_ac }}";
-        var methodAc = null;
-    {% elif method_ac %}
+    {%  else %}
         var entryAc = null;
+    {% endif %}
+
+    {% if method_ac %}
         var methodAc = "{{ method_ac }}";
-    {% else %}
-        var entryAc = null;
+    {%  else %}
         var methodAc = null;
+    {% endif %}
+
+    {% if search %}
+        var search = "{{ search }}";
+    {%  else %}
+        var search = null;
     {% endif %}
 </script>
 </body>
