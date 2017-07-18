@@ -95,6 +95,12 @@ MEMBER_DATABASES = {
         'formatter': None,
         'link': 'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc={}'
     },
+    'g': {
+        'name': 'MobiDB Lite',
+        'home': 'http://mobidb.bio.unipd.it/',
+        'formatter': None,
+        'link': 'http://mobidb.bio.unipd.it/entries/{}'
+    },
 }
 
 XREF_DATABASES = {
@@ -132,7 +138,7 @@ def get_entry(entry_ac):
                 "  E.SHORT_NAME, "
                 "  ET.ABBREV, "
                 "  E.CHECKED, "
-                "  (SELECT COUNT(*) FROM INTERPRO.MV_ENTRY2PROTEIN_TRUE MVEP WHERE MVEP.ENTRY_AC = :entry_ac),"
+                "  (SELECT COUNT(*) FROM INTERPRO.MV_ENTRY2PROTEIN MVEP WHERE MVEP.ENTRY_AC = :entry_ac),"
                 "  E.CREATED,"
                 "  E.TIMESTAMP "
                 "FROM INTERPRO.ENTRY E "
@@ -376,6 +382,66 @@ def get_entry(entry_ac):
 
 def get_protein(protein_ac):
     cur = open_db().cursor()
+
+    cur.execute('SELECT NAME, LEN, DBCODE, TAX_ID '
+                'FROM INTERPRO.PROTEIN '
+                'WHERE PROTEIN_AC = :protein_ac', protein_ac=protein_ac)
+
+    row = cur.fetchone()
+    if not row:
+        return None
+
+    prot_name, prot_length, prot_db, prot_taxid = row
+
+    cur.execute(
+        'SELECT E.ENTRY_AC, E.NAME, CET.ABBREV, MA.METHOD_AC, ME.NAME, MA.POS_FROM, MA.POS_TO, MA.DBCODE '
+        'FROM INTERPRO.MATCH MA '
+        'INNER JOIN INTERPRO.METHOD ME ON MA.METHOD_AC=ME.METHOD_AC '
+        'LEFT OUTER JOIN INTERPRO.ENTRY2METHOD E2M ON E2M.METHOD_AC=MA.METHOD_AC '
+        'LEFT OUTER JOIN INTERPRO.ENTRY E ON E2M.ENTRY_AC=E.ENTRY_AC '
+        'LEFT OUTER JOIN INTERPRO.CV_ENTRY_TYPE CET ON CET.CODE=E.ENTRY_TYPE '
+        'WHERE MA.PROTEIN_AC = :protein_ac',
+        protein_ac=protein_ac
+    )
+
+    entries = {}
+    for entry_ac, entry_name, entry_type, method_ac, method_name, pos_from, pos_to, dbcode in cur:
+        if entry_ac not in entries:
+            entries[entry_ac] = dict(
+                id=entry_ac,
+                type=entry_type,
+                signatures={
+                    method_ac: dict(
+                        id=method_ac,
+                        db=MEMBER_DATABASES[dbcode]['name'],
+                        matches=[(pos_from, pos_to)]
+                    )
+                }
+            )
+        elif method_ac not in entries[entry_ac]['signatures']:
+            entries[entry_ac]['signatures'][method_ac] = dict(
+                id=method_ac,
+                db=MEMBER_DATABASES[dbcode]['name'],
+                matches=[(pos_from, pos_to)]
+            )
+        else:
+            entries[entry_ac]['signatures'][method_ac]['matches'].append((pos_from, pos_to))
+
+    for entry_ac, entry in entries.items():
+        entry['signatures'] = sorted(entry['signatures'].values(), key=lambda x: x['id'])
+
+    return dict(
+        id=protein_ac,
+        name=prot_name,
+        length=prot_length,
+        db=prot_db,
+        prot_taxid=prot_taxid,
+        entries=sorted(entries.values(), key=lambda x: {'Family': 0, 'Domain': 1, 'Repeats': 2}.get(x['type'], 99))
+    )
+
+
+def is_protein(protein_ac):
+    cur = open_db().cursor()
     cur.execute('SELECT P.PROTEIN_AC '
                 'FROM INTERPRO.PROTEIN P '
                 'WHERE P.PROTEIN_AC = :protein_ac', protein_ac=protein_ac)
@@ -449,6 +515,10 @@ def entry_page(entry_ac):
 def signature_page(method_ac):
     return render_template('index.html', method_ac=method_ac)
 
+@app.route('/protein/<protein_ac>/')
+def protein_page(protein_ac):
+    return render_template('index.html', protein_ac=protein_ac)
+
 
 @app.route('/search/')
 def search_page():
@@ -486,14 +556,13 @@ def api_search():
             entry=entry
         ))
 
-    # protein_ac = get_protein(text)
-    # if protein_ac:
-    #     # todo return matches
-    #     return jsonify(dict(
-    #         type='protein',
-    #         url='/api/protein/' + protein_ac,
-    #         matches=[]
-    #     ))
+    protein = get_protein(text)
+    if protein:
+        return jsonify(dict(
+            type='protein',
+            url='/protein/' + text,
+            protein=protein
+        ))
 
     entries = search_entries(text.split())
     if entries:
@@ -525,7 +594,7 @@ def api_entry(entry_ac):
         ))
     else:
         return jsonify(dict(
-            error="not_found",
+            error='not_found',
             url='/entry/' + entry_ac
         ))
 
@@ -545,6 +614,24 @@ def api_signature(method_ac):
             error='not_found',
             url='/signature/' + method_ac
         ))
+
+
+@app.route('/api/protein/<protein_ac>/')
+def api_protein(protein_ac):
+    protein = get_protein(protein_ac)
+
+    if protein:
+        return jsonify(dict(
+            type='protein',
+            url='/protein/' + protein_ac,
+            protein=protein
+        ))
+    else:
+        return jsonify(dict(
+            error='not_found',
+            url='/protein/' + protein_ac
+        ))
+
 
 
 if __name__ == '__main__':
