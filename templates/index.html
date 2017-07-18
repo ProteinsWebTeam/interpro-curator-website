@@ -237,6 +237,13 @@
     </div>
 </section>
 
+<section id="protein" class="section">
+    <div class="container">
+        <h1 class="title"></h1>
+        <h2 class="subtitle"></h2>
+    </div>
+</section>
+
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 <script type=text/javascript>
@@ -252,6 +259,12 @@
         var methodAc = "{{ method_ac }}";
     {%  else %}
         var methodAc = null;
+    {% endif %}
+
+    {% if protein_ac %}
+        var proteinAc = "{{ protein_ac }}";
+    {%  else %}
+        var proteinAc = null;
     {% endif %}
 
     {% if search %}

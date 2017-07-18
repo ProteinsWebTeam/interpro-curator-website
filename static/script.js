@@ -174,6 +174,11 @@ $(function() {
         document.querySelector('#entries tbody').innerHTML = content;
     };
 
+    var updateProteinMatchesSection = function (protein) {
+        document.querySelector('#protein .title').innerHTML = protein.id;
+        document.querySelector('#protein .subtitle').innerHTML = protein.name;
+    };
+
     var searchEntry = function (accession, url) {
         var loader = document.getElementById('loader');
         loader.className = 'modal is-active';
@@ -193,6 +198,37 @@ $(function() {
                 document.getElementById('entry').style.display = 'block';
 
                 updateEntrySection(data.entry);
+            }
+
+            $('#hero').animate({
+                'min-height': null
+            }, 'fast');
+        });
+    };
+
+    var searchProteinMatches = function (proteinAc) {
+        var loader = document.getElementById('loader');
+        loader.className = 'modal is-active';
+
+        $.getJSON($SCRIPT_ROOT + '/api/protein/' + proteinAc, function (data) {
+            loader.className = 'modal';
+
+            if (data.url !== undefined && data.url !== null)
+                window.history.pushState(null, '', data.url);
+
+            if (data.error !== undefined && data.error !== null) {
+                if (data.error === 'not_found') {
+                    document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
+                    document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + text + '</strong> did not match any record in the database.';
+                }
+
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('entry').style.display = 'none';
+                document.getElementById('entries').style.display = 'none';
+                document.getElementById('protein').style.display = 'none';
+            } else if (data.type === 'protein') {
+                updateProteinMatchesSection(data.protein);
+                document.getElementById('protein').style.display = 'block';
             }
 
             $('#hero').animate({
@@ -221,20 +257,29 @@ $(function() {
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('entry').style.display = 'none';
                 document.getElementById('entries').style.display = 'none';
+                document.getElementById('protein').style.display = 'none';
             } else if (data.type === 'entry') {
                 document.getElementById('error').style.display = 'none';
                 document.getElementById('entry').style.display = 'block';
                 document.getElementById('entries').style.display = 'none';
+                document.getElementById('protein').style.display = 'none';
                 updateEntrySection(data.entry);
             } else if (data.type === 'entries') {
                 document.getElementById('error').style.display = 'none';
                 document.getElementById('entry').style.display = 'none';
                 document.getElementById('entries').style.display = 'block';
+                document.getElementById('protein').style.display = 'none';
 
                 document.querySelector('#entries .title').innerHTML = 'Search results';
                 document.querySelector('#entries .subtitle').innerHTML = data.entries.length + ' InterPro entries matching <strong>' + text + '</strong>';
 
                 updateEntriesSection(data.entries);
+            } else if (data.type === 'protein') {
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('entry').style.display = 'none';
+                document.getElementById('entries').style.display = 'none';
+                document.getElementById('protein').style.display = 'block';
+                updateProteinMatchesSection(data.protein);
             }
 
             $('#hero').animate({
@@ -270,6 +315,8 @@ $(function() {
         searchEntry(entryAc, '/api/entry/');
     else if (methodAc !== null)
         searchEntry(methodAc, '/api/signature/');
+    else if (proteinAc !== null)
+        searchProteinMatches(proteinAc);
     else if (search !== null)
         searchText(search);
 });
