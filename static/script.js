@@ -1,4 +1,50 @@
 $(function() {
+    var tooltip = {
+        el: $('#tooltip'),
+        active: false,
+
+        show: function (rect) {
+            this.el.css({
+                top: rect.y - this.el.outerHeight() - 5,
+                left: rect.x + rect.width / 2 - this.el.outerWidth() / 2
+            }).show();
+            this.active = true;
+        },
+
+        _hide: function () {
+            if (!this.active)
+                this.el.hide();
+        },
+
+        hide: function () {
+            this.active = false;
+            var self = this;
+            setTimeout(function () {
+                self._hide();
+            }, 500);
+        },
+
+        update: function (fromPos, toPos, sId, sName, sURL, dbName) {
+            var $p = this.el.find('p');
+            $p.get(0).innerHTML = fromPos.toLocaleString() + ' - ' + toPos.toLocaleString();
+            $p.get(1).innerHTML = sName;
+            $p.get(2).innerHTML = '<strong>' + dbName + '</strong> <a target="_blank" href="'+ sURL +'">'+ sId +'&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>';
+        },
+
+        init: function () {
+            var self = this;
+            this.el.on('mouseenter', function () {
+                self.active = true;
+            });
+
+            this.el.on('mouseleave', function () {
+                self.hide();
+            });
+        }
+    };
+
+    tooltip.init();
+
     var updateEntrySection = function (entry) {
         document.querySelector('#entry .title').innerHTML = entry.id;
         document.querySelector('#entry .subtitle').innerHTML = entry.name + ' (' + entry.short_name + ')';
@@ -48,7 +94,7 @@ $(function() {
         document.getElementById('description-content').innerHTML = description;
 
         // Header block (depends on references so not updated before)
-        document.getElementById('protein-count').innerHTML = entry.count;
+        document.getElementById('protein-count').innerHTML = entry.count.toLocaleString();
         document.getElementById('entry-type').innerHTML = entry.type.replace('_', ' ');
         document.getElementById('signature-count').innerHTML = entry.signatures.length;
         document.getElementById('go-count').innerHTML = entry.go.length;
@@ -111,7 +157,7 @@ $(function() {
             else
                 content += '<td>' + s.method_ac + '</td>';
 
-            content += '<td>' + s.name + '</td><td>' + s.count + '</td>' +
+            content += '<td>' + s.name + '</td><td>' + s.count.toLocaleString() + '</td>' +
                 '<td><a href="http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load/interpro/curation/OverlappingQuerySignature.jelly?signature=' +
                 s.method_ac + '" target="_blank">Happy Helper <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></td></tr>';
         });
@@ -156,7 +202,7 @@ $(function() {
 
         entry.go.forEach(function (term) {
             if (goTerms.hasOwnProperty(term.category))
-                goTerms[term.category] += '<dd>' + '<a href="http://www.ebi.ac.uk/QuickGO/GTerm?id=' + term.id + '" target="_blank">' + term.id + ' <span class="icon is-small"><i class="fa fa-external-link"></i></span></a>&nbsp;' + term.name + '</dd>';
+                goTerms[term.category] += '<dd>' + '<a href="http://www.ebi.ac.uk/QuickGO/GTerm?id=' + term.id + '" target="_blank">' + term.id + '&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>&nbsp;' + term.name + '</dd>';
         });
 
         content = '<dl><dt>Biological Process</dt>' + (goTerms['P'].length ? goTerms['P'] : '<dd>No terms assigned in this category.</dd>');
@@ -175,8 +221,73 @@ $(function() {
     };
 
     var updateProteinMatchesSection = function (protein) {
-        document.querySelector('#protein .title').innerHTML = protein.id;
-        document.querySelector('#protein .subtitle').innerHTML = protein.name;
+        document.getElementById('protein-id').innerHTML = '<a href="http://www.uniprot.org/uniprot/'+ protein.id +'" target="_blank">' + protein.id + '&nbsp;<span class="icon"><i class="fa fa-external-link"></i></span></a>';
+        document.getElementById('protein-name').innerHTML = protein.name;
+        document.getElementById('protein-organism').innerHTML = protein.organism !== null && protein.organism.length > 30 ? '<abbr title="'+protein.organism+'">'+protein.organism.substr(0, 30)+'&hellip;</abbr>': protein.organism;
+        document.getElementById('protein-length').innerHTML = protein.length.toLocaleString();
+
+        var $el = $('#matches');
+        var content = '';
+        var fullWidth = $el.width();
+        var width = fullWidth - 200;
+        var step = Math.pow(10, Math.floor(Math.log(protein.length) / Math.log(10))) / 2;
+
+        protein.entries.forEach(function (entry) {
+            content += '';
+
+            if (entry.id !== null)
+                content += '<p><a href="/entry/'+ entry.id +'">' + entry.id + '</a>&nbsp;' + entry.name + '</p>';
+            else
+                content += '<p>Unintegrated signatures</p>';
+
+            var svgHeight = (15 * (entry.signatures.length + 1) + 5);
+            var svgContent = 15 * entry.signatures.length + 5;
+
+            content += '<svg width="' + fullWidth + '" height="'+ svgHeight +'" xmlns="http://www.w3.org/2000/svg"><rect height="' + svgContent + '" width="'+ width +'" fill="#eee"></rect>';
+
+            var x = 0;
+            while (x < width) {
+                content += '<line stroke-dasharray="2, 2" x1="'+ x +'" y1="0" x2="'+ x +'" y2="'+svgContent+'" stroke="black" stroke-width="0.5" />';
+                x += (step * width / protein.length);
+            }
+
+            entry.signatures.forEach(function (s, i) {
+                var color = s.color !== undefined && s.color !== null ? s.color : '#a5a5a5';
+                var y = 5 + i * 15;
+
+                content += '<g data-id="'+ s.id +'" data-name="'+ s.name +'" data-db="'+ s.db +'" data-url="'+ s.url +'">';
+
+                s.matches.forEach(function (m) {
+                    var x = m.from * width / protein.length;
+                    var rectWidth = (m.to * width / protein.length) - x;
+                    content += '<rect data-from="' + m.from + '" data-to="' + m.to + '" x="' + x + '" y="' + y + '" width="'+ rectWidth +'" height="10" rx="2" ry="2" fill="' + color + '"></rect>';
+                });
+
+                content += '<text x="' + (width + 10) + '" y="' + (y + 5) + '"><a target="_blank" href="'+s.url+'">' + s.id + '&nbsp;<tspan>&#xf08e;</tspan></a></text></g>';
+            });
+
+            content += '</svg>';
+        });
+
+        $el
+            .html(content)
+            .off()
+            .on('mouseenter', 'rect[data-from]', function () {
+                var $g = $(this).parent();
+
+                var fromPos = $(this).data('from');
+                var toPos = $(this).data('to');
+                var sID = $g.data('id');
+                var sName = $g.data('name');
+                var sURL = $g.data('url');
+                var dbName = $g.data('db');
+
+                tooltip.update(fromPos, toPos, sID, sName, sURL, dbName);
+                tooltip.show(this.getBoundingClientRect());
+            })
+            .on('mouseleave', 'rect[data-from]', function () {
+                tooltip.hide();
+            });
     };
 
     var searchEntry = function (accession, url) {
@@ -227,8 +338,8 @@ $(function() {
                 document.getElementById('entries').style.display = 'none';
                 document.getElementById('protein').style.display = 'none';
             } else if (data.type === 'protein') {
-                updateProteinMatchesSection(data.protein);
                 document.getElementById('protein').style.display = 'block';
+                updateProteinMatchesSection(data.protein);
             }
 
             $('#hero').animate({

@@ -24,7 +24,7 @@
     font-size: 4rem;
 }
 
-#result, #entry, #entries, #error, #warning {
+#result, #entry, #entries, #protein, #error, #warning {
     display: none;
 }
 
@@ -44,15 +44,83 @@
     color: #005188;
 }
 
-dl > dd + dt {
-    margin-top: 1rem;
-}
-
 .level-item a {
     color: #0070bb;
+}
+
+dl > dd + dt {
+    margin-top: 1rem;
 }
 
 .field + .help {
     margin-top: -.5rem;
 }
 
+#protein .column {
+    padding-top: 0;
+    padding-bottom: .25rem;
+}
+
+#protein p + svg {
+    margin-bottom: 1rem;
+}
+
+#protein p {
+    margin-bottom: .25rem;
+}
+
+#protein svg rect[data-from] {
+    fill-opacity: 0.75;
+}
+
+#protein svg rect[data-from]:hover {
+    fill-opacity: 1;
+    cursor: pointer;
+}
+
+#protein svg text {
+    dominant-baseline: central;
+    font-size: .9rem;
+}
+
+#protein svg text a {
+    fill: #4a4a4a;
+}
+
+#protein svg text a:hover, #protein svg text a:focus  {
+    fill: #1a1a1a;
+}
+
+#protein svg text tspan {
+    font-family: FontAwesome;
+}
+
+#tooltip {
+    background-color: #fff;
+    border-radius: 5px;
+    -webkit-box-shadow: 0 2px 3px rgba(10,10,10,.1),0 0 0 1px rgba(10,10,10,.1);
+    box-shadow: 0 2px 3px rgba(10,10,10,.1),0 0 0 1px rgba(10,10,10,.1);
+    padding: .5rem;
+    width: 275px;
+    position: fixed;
+    display: none;
+    z-index: 9999;
+}
+
+#tooltip a {
+    color: #0070bb;
+}
+
+#tooltip a:hover, #tooltip a:active, #tooltip a:focus {
+    color: #005188;
+}
+
+#tooltip > .subtitle + p {
+    margin-top: -1.5rem;
+    font-weight: 300;
+    font-size: .9rem;
+}
+
+#protein-organism {
+    font-style: italic;
+}

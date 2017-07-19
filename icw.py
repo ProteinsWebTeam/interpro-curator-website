@@ -15,91 +15,106 @@ MEMBER_DATABASES = {
         'name': 'CATH-Gene3D',
         'home': 'http://www.cathdb.info/',
         'formatter': lambda ac: re.match(r'G3DSA:(.+)', ac).group(1),
-        'link': 'http://www.cathdb.info/superfamily/{}'
+        'link': 'http://www.cathdb.info/superfamily/{}',
+        'color': '#da467b'
     },
     'J': {
         'name': 'CDD',
         'home': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml',
         'formatter': None,
-        'link': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid={}'
+        'link': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid={}',
+        'color': '#a24863'
     },
     'Q': {
         'name': 'HAMAP',
         'home': 'http://hamap.expasy.org/',
         'formatter': None,
-        'link': 'http://hamap.expasy.org/profile/{}'
+        'link': 'http://hamap.expasy.org/profile/{}',
+        'color': '#e1827a'
     },
     'V': {
         'name': 'PANTHER',
         'home': 'http://www.pantherdb.org/',
         'formatter': None,
-        'link': 'http://www.pantherdb.org/panther/family.do?clsAccession={}'
+        'link': 'http://www.pantherdb.org/panther/family.do?clsAccession={}',
+        'color': '#d04d33'
     },
     'H': {
         'name': 'Pfam',
         'home': 'http://pfam.xfam.org/',
         'formatter': None,
-        'link': 'http://pfam.xfam.org/family/{}'
+        'link': 'http://pfam.xfam.org/family/{}',
+        'color': '#a36b33'
     },
     'U': {
         'name': 'PIRSF',
         'home': 'http://pir.georgetown.edu/pirwww/dbinfo/pirsf.shtml',
         'formatter': None,
-        'link': 'http://pir.georgetown.edu/cgi-bin/ipcSF?id={}'
+        'link': 'http://pir.georgetown.edu/cgi-bin/ipcSF?id={}',
+        'color': '#d0a242'
     },
     'F': {
         'name': 'PRINTS',
         'home': 'http://www.bioinf.manchester.ac.uk/dbbrowser/PRINTS/',
         'formatter': None,
-        'link': 'http://www.bioinf.manchester.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?prints_accn={}&display_opts=Prints&category=None&queryform=false&regexpr=off'
+        'link': 'http://www.bioinf.manchester.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?prints_accn={}&display_opts=Prints&category=None&queryform=false&regexpr=off',
+        'color': '#6a863e'
     },
     'D': {
         'name': 'ProDom',
         'home': 'http://prodom.prabi.fr/',
         'formatter': None,
-        'link': 'http://prodom.prabi.fr/prodom/current/cgi-bin/request.pl?question=DBEN&query={}'
+        'link': 'http://prodom.prabi.fr/prodom/current/cgi-bin/request.pl?question=DBEN&query={}',
+        'color': '#76b84a'
     },
     'P': {
         'name': 'PROSITE patterns',
         'home': 'http://prosite.expasy.org/',
         'formatter': None,
-        'link': 'http://prosite.expasy.org/{}'
+        'link': 'http://prosite.expasy.org/{}',
+        'color': '#4db395'
     },
     'M': {
         'name': 'PROSITE profiles',
         'home': 'http://prosite.expasy.org/',
         'formatter': None,
-        'link': 'http://prosite.expasy.org/{}'
+        'link': 'http://prosite.expasy.org/{}',
+        'color': '#60a2d9'
     },
     'B': {
         'name': 'SFLD',
         'home': 'http://sfld.rbvi.ucsf.edu/django/',
         'formatter': lambda ac: 'family/' + ac[5:] if ac.startwith('SFLDF') else 'superfamily/' + ac[5:] if ac.startwith('SFLDS') else 'subgroup/' + ac[5:],
-        'link': 'http://sfld.rbvi.ucsf.edu/django/{}'
+        'link': 'http://sfld.rbvi.ucsf.edu/django/{}',
+        'color': '#6175c3'
     },
     'R': {
         'name': 'SMART',
         'home': 'http://smart.embl-heidelberg.de/',
         'formatter': None,
-        'link': 'http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC={}&BLAST=DUMMY'
+        'link': 'http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC={}&BLAST=DUMMY',
+        'color': '#7e63d7'
     },
     'Y': {
         'name': 'SUPERFAMILY',
         'home': 'http://supfam.org/SUPERFAMILY/',
         'formatter': None,
-        'link': 'http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid={}'
+        'link': 'http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid={}',
+        'color': '#90519d'
     },
     'N': {
         'name': 'TIGRFAMs',
         'home': 'http://www.jcvi.org/cgi-bin/tigrfams/index.cgi',
         'formatter': None,
-        'link': 'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc={}'
+        'link': 'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc={}',
+        'color': '#d18dcd'
     },
     'g': {
         'name': 'MobiDB Lite',
         'home': 'http://mobidb.bio.unipd.it/',
         'formatter': None,
-        'link': 'http://mobidb.bio.unipd.it/entries/{}'
+        'link': 'http://mobidb.bio.unipd.it/entries/{}',
+        'color': '#c952bc'
     },
 }
 
@@ -383,15 +398,17 @@ def get_entry(entry_ac):
 def get_protein(protein_ac):
     cur = open_db().cursor()
 
-    cur.execute('SELECT NAME, LEN, DBCODE, TAX_ID '
-                'FROM INTERPRO.PROTEIN '
+    cur.execute('SELECT P.NAME, P.LEN, P.DBCODE, P.TAX_ID, E.SCIENTIFIC_NAME '
+                'FROM INTERPRO.PROTEIN P '
+                'LEFT OUTER JOIN INTERPRO.ETAXI E ON P.TAX_ID=E.TAX_ID '
                 'WHERE PROTEIN_AC = :protein_ac', protein_ac=protein_ac)
 
     row = cur.fetchone()
     if not row:
         return None
 
-    prot_name, prot_length, prot_db, prot_taxid = row
+    prot_name, prot_length, prot_db, prot_taxid, sci_name = row
+    print(prot_taxid)
 
     cur.execute(
         'SELECT E.ENTRY_AC, E.NAME, CET.ABBREV, MA.METHOD_AC, ME.NAME, MA.POS_FROM, MA.POS_TO, MA.DBCODE '
@@ -404,28 +421,34 @@ def get_protein(protein_ac):
         protein_ac=protein_ac
     )
 
+    # if db['formatter'] is None:
+    #     link = db['link'].format(method_ac)
+    # else:
+    #     link = db['link'].format(db['formatter'](method_ac))
+
     entries = {}
     for entry_ac, entry_name, entry_type, method_ac, method_name, pos_from, pos_to, dbcode in cur:
         if entry_ac not in entries:
             entries[entry_ac] = dict(
                 id=entry_ac,
+                name=entry_name,
                 type=entry_type,
-                signatures={
-                    method_ac: dict(
-                        id=method_ac,
-                        db=MEMBER_DATABASES[dbcode]['name'],
-                        matches=[(pos_from, pos_to)]
-                    )
-                }
+                signatures=dict()
             )
-        elif method_ac not in entries[entry_ac]['signatures']:
+
+        if method_ac not in entries[entry_ac]['signatures']:
+            db = MEMBER_DATABASES[dbcode]
+
             entries[entry_ac]['signatures'][method_ac] = dict(
                 id=method_ac,
-                db=MEMBER_DATABASES[dbcode]['name'],
-                matches=[(pos_from, pos_to)]
+                name=method_name,
+                db=db['name'],
+                color=db['color'],
+                url=db['link'].format(method_ac) if db['formatter'] is None else db['link'].format(db['formatter'](method_ac)),
+                matches=[]
             )
-        else:
-            entries[entry_ac]['signatures'][method_ac]['matches'].append((pos_from, pos_to))
+
+        entries[entry_ac]['signatures'][method_ac]['matches'].append({'from': pos_from, 'to': pos_to})
 
     for entry_ac, entry in entries.items():
         entry['signatures'] = sorted(entry['signatures'].values(), key=lambda x: x['id'])
@@ -435,8 +458,13 @@ def get_protein(protein_ac):
         name=prot_name,
         length=prot_length,
         db=prot_db,
+        organism=sci_name,
         prot_taxid=prot_taxid,
-        entries=sorted(entries.values(), key=lambda x: {'Family': 0, 'Domain': 1, 'Repeats': 2}.get(x['type'], 99))
+        entries=sorted(
+            entries.values(),
+            # Families, Domains, and Repeats come first, None (Unintegrated) come last
+            key=lambda x: {'Family': 0, 'Domain': 1, 'Repeat': 2, None: 99}.get(x['type'], 50)
+        )
     )
 
 

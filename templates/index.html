@@ -36,7 +36,7 @@
                         </p>
                     </div>
                     <p class="help">
-                        Examples: <a href="/entry/IPR020405/">IPR020405</a>, <a href="/signature/PF02171/">PF02171</a>, <a href="/search?q=GO:0006915">GO:0006915</a>, <a href="/search?q=Ribosome">Ribosome</a>
+                        Examples: <a href="/entry/IPR020405/">IPR020405</a>, <a href="/signature/PF02171/">PF02171</a>, <a href="/search?q=GO:0006915">GO:0006915</a>, <a href="/protein/P51587">P51587</a>
                     </p>
 
                 </div>
@@ -136,10 +136,10 @@
                         <dd>
                             <a target="_blank" data-href="http://www.ebi.ac.uk/interpro/entry/">Entry&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                         </dd>
-{#                        <dt>Happy Helper</dt>#}
-{#                        <dd>#}
-{#                            <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
-{#                        </dd>#}
+                        {#                        <dt>Happy Helper</dt>#}
+                        {#                        <dd>#}
+                        {#                            <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
+                        {#                        </dd>#}
                         <dt>Talisman</dt>
                         <dd class="left">
                             <div class="level-left">
@@ -239,10 +239,47 @@
 
 <section id="protein" class="section">
     <div class="container">
-        <h1 class="title"></h1>
-        <h2 class="subtitle"></h2>
+        <div class="box">
+            <nav class="level">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Accession</p>
+                    <p id="protein-id" class="title"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Name</p>
+                    <p id="protein-name" class="title"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Organism</p>
+                    <p id="protein-organism" class="title"></p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Length</p>
+                    <p id="protein-length" class="title"></p>
+                </div>
+            </div>
+        </nav>
+        </div>
+
+        <div id="matches" class="content">
+
+        </div>
+
     </div>
 </section>
+
+<div id="tooltip">
+    <p class="title is-5"></p>
+    <p class="subtitle is-6"></p>
+    <p></p>
+</div>
 
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
