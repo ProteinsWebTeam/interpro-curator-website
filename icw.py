@@ -283,13 +283,32 @@ def get_entry(entry_ac):
         })
 
     # GO annotations
-    cur.execute("SELECT G.CATEGORY, G.GO_ID, G.NAME "
-                "FROM GO.TERMS@GOAPRO G "
-                "INNER JOIN INTERPRO.INTERPRO2GO I2G ON G.GO_ID = I2G.GO_ID "
-                "WHERE I2G.ENTRY_AC = :entry_ac "
-                "ORDER BY G.CATEGORY, G.GO_ID", entry_ac=entry_ac)
+    # cur.execute("SELECT G.GO_ID, G.CATEGORY, G.NAME "
+    #             "FROM GO.TERMS@GOAPRO G "
+    #             "INNER JOIN INTERPRO.INTERPRO2GO I2G ON G.GO_ID = I2G.GO_ID "
+    #             "WHERE I2G.ENTRY_AC = :entry_ac "
+    #             "ORDER BY G.CATEGORY, G.GO_ID", entry_ac=entry_ac)
+    #
+    # entry['go'] = [dict(zip(['id', 'category', 'name'], row)) for row in cur]
 
-    entry['go'] = [dict(zip(['category', 'id', 'name'], row)) for row in cur]
+    cur.execute('SELECT GT.GO_ID, GT.CATEGORY, GT.NAME '
+                'FROM GO.TERMS@GOAPRO GT '
+                'INNER JOIN ('
+                '  SELECT GS.GO_ID '
+                '  FROM INTERPRO.INTERPRO2GO I2G '
+                '  INNER JOIN GO.SECONDARIES@GOAPRO GS '
+                '  ON I2G.GO_ID=GS.SECONDARY_ID '
+                '  WHERE I2G.ENTRY_AC=:entry_ac '
+                '  UNION '
+                '  SELECT GS.GO_ID '
+                '  FROM INTERPRO.INTERPRO2GO I2G '
+                '  INNER JOIN GO.SECONDARIES@GOAPRO GS '
+                '  ON I2G.GO_ID=GS.GO_ID '
+                '  WHERE I2G.ENTRY_AC=:entry_ac'
+                ') GS '
+                'ON GS.GO_ID = GT.GO_ID', entry_ac=entry_ac)
+
+    entry['go'] = [dict(zip(['id', 'category', 'name'], row)) for row in cur]
 
     # References
     cur.execute("SELECT "
@@ -408,7 +427,6 @@ def get_protein(protein_ac):
         return None
 
     prot_name, prot_length, prot_db, prot_taxid, sci_name = row
-    print(prot_taxid)
 
     cur.execute(
         'SELECT E.ENTRY_AC, E.NAME, CET.ABBREV, MA.METHOD_AC, ME.NAME, MA.POS_FROM, MA.POS_TO, MA.DBCODE '
