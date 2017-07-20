@@ -36,11 +36,11 @@
     margin-bottom: 1rem;
 }
 
-.content a {
+.content a, .table a {
     color: #0070bb;
 }
 
-.content a:hover, .content a:active, .content a:focus {
+.content a:hover, .content a:active, .content a:focus, .table a:hover, .table a:active, .table a:focus {
     color: #005188;
 }
 
@@ -81,6 +81,12 @@ dl > dd + dt {
 #protein svg text {
     dominant-baseline: central;
     font-size: .9rem;
+}
+
+#protein svg g.ticks text {
+    dominant-baseline: hanging;
+    text-anchor: middle;
+    font-size: .75rem;
 }
 
 #protein svg text a {

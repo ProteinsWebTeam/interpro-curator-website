@@ -49,7 +49,7 @@ $(function() {
         document.querySelector('#entry .title').innerHTML = entry.id;
         document.querySelector('#entry .subtitle').innerHTML = entry.name + ' (' + entry.short_name + ')';
 
-        if (entry.missing_xref) {
+        if (entry.missing_xrefs) {
             document.querySelector('#warning .message-header').innerHTML = "<p><strong>Hum. That's embarrassing</strong></p>";
             document.querySelector('#warning .message-body').innerHTML = '<p>At least one link for a cross-reference could not be generated. Please contact the production team.</p>';
             document.getElementById('warning').style.display = 'block';
@@ -57,8 +57,17 @@ $(function() {
             document.getElementById('warning').style.display = 'none';
 
         // Curation block
-        document.querySelectorAll('#curation-content a').forEach(function (el) {
-            el.href = el.getAttribute('data-href') + entry.id;
+        document.querySelectorAll('#curation-content a[data-href-entry]').forEach(function (el) {
+            el.href = el.getAttribute('data-href-entry') + entry.id;
+        });
+
+        document.querySelectorAll('#curation-content a[data-href-signatures]').forEach(function (el) {
+            var signatures = [];
+            entry.signatures.forEach(function (s) {
+                signatures.push(s.method_ac);
+            });
+
+            el.href = el.getAttribute('data-href-signatures') + signatures.join(',');
         });
 
         // Description block
@@ -81,14 +90,6 @@ $(function() {
             });
 
             description = description.replace(arr[0], '<sup>[' + content.join(', ') + ']</sup>');
-        }
-
-        re = /<xref name="([^"]+)" url="([^"]*)"\/>/g;
-        while ((arr = re.exec(description)) !== null) {
-            if (arr[2].length)
-                description = description.replace(arr[0], '<a href="'+arr[2]+'" target="_blank">' + arr[1] + '&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>');
-            else
-                description = description.replace(arr[0], arr[1]);
         }
 
         document.getElementById('description-content').innerHTML = description;
@@ -245,11 +246,15 @@ $(function() {
 
             content += '<svg width="' + fullWidth + '" height="'+ svgHeight +'" xmlns="http://www.w3.org/2000/svg"><rect height="' + svgContent + '" width="'+ width +'" fill="#eee"></rect>';
 
-            var x = 0;
-            while (x < width) {
+            var pos;
+            var x;
+            content += '<g class="ticks">';
+            for (pos = step; pos < protein.length; pos += step) {
+                x = pos * width / protein.length;
                 content += '<line stroke-dasharray="2, 2" x1="'+ x +'" y1="0" x2="'+ x +'" y2="'+svgContent+'" stroke="black" stroke-width="0.5" />';
-                x += (step * width / protein.length);
+                content += '<text x="' + x + '" y="'+ svgContent +'">' + pos.toLocaleString() + '</text>';
             }
+            content += '</g>';
 
             entry.signatures.forEach(function (s, i) {
                 var color = s.color !== undefined && s.color !== null ? s.color : '#a5a5a5';
@@ -288,6 +293,57 @@ $(function() {
             .on('mouseleave', 'rect[data-from]', function () {
                 tooltip.hide();
             });
+
+        var svgHeight = (15 * (protein.structs.length + 1) + 5);
+        var svgContent = 15 * protein.structs.length + 5;
+        content = '<svg width="' + fullWidth + '" height="'+ svgHeight +'" xmlns="http://www.w3.org/2000/svg"><rect height="' + svgContent + '" width="'+ width +'" fill="#eee"></rect>';
+
+        var x;
+        var pos;
+        content += '<g class="ticks">';
+        for (pos = step; pos < protein.length; pos += step) {
+            x = pos * width / protein.length;
+            content += '<line stroke-dasharray="2, 2" x1="'+ x +'" y1="0" x2="'+ x +'" y2="'+svgContent+'" stroke="black" stroke-width="0.5" />';
+            content += '<text x="' + x + '" y="'+ svgContent +'">' + pos.toLocaleString() + '</text>';
+        }
+        content += '</g>';
+
+        protein.structs.forEach(function (db, i, arr) {
+            content += '';
+            var color = db.color !== undefined && db.color !== null ? db.color : '#a5a5a5';
+            var y = 5 + i * 15;
+
+            content += '<g data-db="'+ db.name +'">';
+
+            db.matches.forEach(function (m) {
+                var x = m.from * width / protein.length;
+                var rectWidth = (m.to * width / protein.length) - x;
+                content += '<rect data-from="' + m.from + '" data-to="' + m.to + '" data-id="'+m.id+'" data-url="'+m.url+'" x="' + x + '" y="' + y + '" width="'+ rectWidth +'" height="10" rx="2" ry="2" fill="' + color + '"></rect>';
+            });
+
+            content += '<text x="' + (width + 10) + '" y="' + (y + 5) + '"><a target="_blank" href="'+db.url+'">' + db.name + '&nbsp;<tspan>&#xf08e;</tspan></a></text></g>';
+        });
+
+        content += '</svg>';
+
+        $('#struct-matches')
+            .html(protein.structs.length ? content : '<p>No structural match data for this protein.</p>')
+            .off()
+            .on('mouseenter', 'rect[data-from]', function () {
+                var $g = $(this).parent();
+
+                var fromPos = $(this).data('from');
+                var toPos = $(this).data('to');
+                var mID = $(this).data('id');
+                var mURL = $(this).data('url');
+                var dbName = $g.data('db');
+
+                tooltip.update(fromPos, toPos, mID, '', mURL, dbName);
+                tooltip.show(this.getBoundingClientRect());
+            })
+            .on('mouseleave', 'rect[data-from]', function () {
+                tooltip.hide();
+            });
     };
 
     var searchEntry = function (accession, url) {
@@ -300,8 +356,8 @@ $(function() {
             window.history.pushState(null, '', data.url);
 
             if (data.error !== undefined && data.error !== null) {
-                document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
-                document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + accession + '</strong> did not match any record in the database.';
+                document.querySelector('#error .message-header').innerHTML = '<p><strong>'+ data.error.title +'</strong></p>';
+                document.querySelector('#error .message-body').innerHTML = data.error.message;
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('entry').style.display = 'none';
             } else {
@@ -328,11 +384,8 @@ $(function() {
                 window.history.pushState(null, '', data.url);
 
             if (data.error !== undefined && data.error !== null) {
-                if (data.error === 'not_found') {
-                    document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
-                    document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + text + '</strong> did not match any record in the database.';
-                }
-
+                document.querySelector('#error .message-header').innerHTML = '<p><strong>'+ data.error.title +'</strong></p>';
+                document.querySelector('#error .message-body').innerHTML = data.error.message;
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('entry').style.display = 'none';
                 document.getElementById('entries').style.display = 'none';
@@ -360,11 +413,8 @@ $(function() {
                 window.history.pushState(null, '', data.url);
 
             if (data.error !== undefined && data.error !== null) {
-                if (data.error === 'not_found') {
-                    document.querySelector('#error .message-header').innerHTML = '<p><strong>Keep on looking.</strong></p>';
-                    document.querySelector('#error .message-body').innerHTML = 'Your search for <strong>' + text + '</strong> did not match any record in the database.';
-                }
-
+                document.querySelector('#error .message-header').innerHTML = '<p><strong>'+ data.error.title +'</strong></p>';
+                document.querySelector('#error .message-body').innerHTML = data.error.message;
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('entry').style.display = 'none';
                 document.getElementById('entries').style.display = 'none';

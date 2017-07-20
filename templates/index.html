@@ -63,14 +63,6 @@
     </div>
 </section>
 
-<section id="warning" class="section">
-    <div class="container">
-        <div class="message is-warning">
-            <div class="message-header"></div>
-            <div class="message-body"></div>
-        </div>
-    </div>
-</section>
 
 <section id="entry" class="section">
     <div class="container">
@@ -129,40 +121,46 @@
 
             </div>
             <div class="column">
+                <div id="warning" class="message is-warning">
+                    <div class="message-header"></div>
+                    <div class="message-body"></div>
+                </div>
                 <h3 id="curation" class="title">Curation</h3>
                 <div id="curation-content" class="content">
                     <dl>
                         <dt>Public website</dt>
                         <dd>
-                            <a target="_blank" data-href="http://www.ebi.ac.uk/interpro/entry/">Entry&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                            <a target="_blank" data-href-entry="http://www.ebi.ac.uk/interpro/entry/">Entry&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                         </dd>
-                        {#                        <dt>Happy Helper</dt>#}
-                        {#                        <dd>#}
-                        {#                            <a target="_blank" data-href="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
-                        {#                        </dd>#}
+                        <dt>Happy Helper</dt>
+                        <dd>
+                            {#<a target="_blank" data-href-entry="http://www.ebi.ac.uk/internal-tools/openSQL/view/interpro/curation/home.jelly?/interpro/curation/matchviews/matches.jelly?entry=">Matches&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
+                            <a target="_blank" data-href-signatures="http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load/interpro/curation/comparisons/compare-signature-protein-description.jelly?db=S&features=">Descriptions&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                        </dd>
+
                         <dt>Talisman</dt>
                         <dd class="left">
                             <div class="level-left">
                                 <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_entry.xml&url=ipro&ac=">Abstract&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                    <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_entry.xml&url=ipro&ac=">Abstract&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_interpro2go/interpro2go.xml&url=IPRO&ac=">InterPro2GO&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                    <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_interpro2go/interpro2go.xml&url=IPRO&ac=">InterPro2GO&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/merge.xml&url=IPRO&ac=">Merge&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                    <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/merge.xml&url=IPRO&ac=">Merge&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_reference/ref_manager.xml&url=IPRO&ac=">References&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                    <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_reference/ref_manager.xml&url=IPRO&ac=">References&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/new_relation.xml&url=IPRO&ac=">Relationship&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                    <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/new_relation.xml&url=IPRO&ac=">Relationship&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 <div class="level-item">
-                                    <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/split2.xml&url=IPRO&ac=">Split&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
+                                    <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_entry/split2.xml&url=IPRO&ac=">Split&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>
                                 </div>
                                 {#                                    <div class="level-item">#}
-                                {#                                        <a target="_blank" data-href="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_block.xml&url=ipro&ac=">Common annotations&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
+                                {#                                        <a target="_blank" data-href-entry="http://www.ebi.ac.uk/talisman/Create?page=ipr_commabs/annot_block.xml&url=ipro&ac=">Common annotations&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a>#}
                                 {#                                    </div>#}
                             </div>
                         </dd>
@@ -241,37 +239,40 @@
     <div class="container">
         <div class="box">
             <nav class="level">
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Accession</p>
-                    <p id="protein-id" class="title"></p>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Accession</p>
+                        <p id="protein-id" class="title"></p>
+                    </div>
                 </div>
-            </div>
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Name</p>
-                    <p id="protein-name" class="title"></p>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Name</p>
+                        <p id="protein-name" class="title"></p>
+                    </div>
                 </div>
-            </div>
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Organism</p>
-                    <p id="protein-organism" class="title"></p>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Organism</p>
+                        <p id="protein-organism" class="title"></p>
+                    </div>
                 </div>
-            </div>
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Length</p>
-                    <p id="protein-length" class="title"></p>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Length</p>
+                        <p id="protein-length" class="title"></p>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
         </div>
 
+        <h3 class="title">Detailed signature matches</h3>
         <div id="matches" class="content">
-
         </div>
 
+        <h3 class="title">Structural features and predictions</h3>
+        <div id="struct-matches" class="content">
+        </div>
     </div>
 </section>
 

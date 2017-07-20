@@ -10,55 +10,14 @@ from flask import Flask, g, jsonify, render_template, request
 app = Flask(__name__)
 app.config.from_object('config')
 
-MEMBER_DATABASES = {
-    'X': {
-        'name': 'CATH-Gene3D',
-        'home': 'http://www.cathdb.info/',
-        'formatter': lambda ac: re.match(r'G3DSA:(.+)', ac).group(1),
-        'link': 'http://www.cathdb.info/superfamily/{}',
-        'color': '#da467b'
-    },
-    'J': {
-        'name': 'CDD',
-        'home': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml',
-        'formatter': None,
-        'link': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid={}',
-        'color': '#a24863'
-    },
-    'Q': {
-        'name': 'HAMAP',
-        'home': 'http://hamap.expasy.org/',
-        'formatter': None,
-        'link': 'http://hamap.expasy.org/profile/{}',
-        'color': '#e1827a'
-    },
-    'V': {
-        'name': 'PANTHER',
-        'home': 'http://www.pantherdb.org/',
-        'formatter': None,
-        'link': 'http://www.pantherdb.org/panther/family.do?clsAccession={}',
-        'color': '#d04d33'
-    },
-    'H': {
-        'name': 'Pfam',
-        'home': 'http://pfam.xfam.org/',
-        'formatter': None,
-        'link': 'http://pfam.xfam.org/family/{}',
-        'color': '#a36b33'
-    },
-    'U': {
-        'name': 'PIRSF',
-        'home': 'http://pir.georgetown.edu/pirwww/dbinfo/pirsf.shtml',
-        'formatter': None,
-        'link': 'http://pir.georgetown.edu/cgi-bin/ipcSF?id={}',
-        'color': '#d0a242'
-    },
-    'F': {
-        'name': 'PRINTS',
-        'home': 'http://www.bioinf.manchester.ac.uk/dbbrowser/PRINTS/',
-        'formatter': None,
-        'link': 'http://www.bioinf.manchester.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?prints_accn={}&display_opts=Prints&category=None&queryform=false&regexpr=off',
-        'color': '#6a863e'
+DATABASES = {
+    # Method databases
+    'B': {
+        'name': 'SFLD',
+        'home': 'http://sfld.rbvi.ucsf.edu/django/',
+        'formatter': lambda ac: 'family/' + ac[5:] if ac.startwith('SFLDF') else 'superfamily/' + ac[5:] if ac.startwith('SFLDS') else 'subgroup/' + ac[5:],
+        'link': 'http://sfld.rbvi.ucsf.edu/django/{}',
+        'color': '#6175c3'
     },
     'D': {
         'name': 'ProDom',
@@ -67,12 +26,26 @@ MEMBER_DATABASES = {
         'link': 'http://prodom.prabi.fr/prodom/current/cgi-bin/request.pl?question=DBEN&query={}',
         'color': '#76b84a'
     },
-    'P': {
-        'name': 'PROSITE patterns',
-        'home': 'http://prosite.expasy.org/',
+    'F': {
+        'name': 'PRINTS',
+        'home': 'http://www.bioinf.manchester.ac.uk/dbbrowser/PRINTS/',
         'formatter': None,
-        'link': 'http://prosite.expasy.org/{}',
-        'color': '#4db395'
+        'link': 'http://www.bioinf.manchester.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?prints_accn={}&display_opts=Prints&category=None&queryform=false&regexpr=off',
+        'color': '#6a863e'
+    },
+    'H': {
+        'name': 'Pfam',
+        'home': 'http://pfam.xfam.org/',
+        'formatter': None,
+        'link': 'http://pfam.xfam.org/family/{}',
+        'color': '#a36b33'
+    },
+    'J': {
+        'name': 'CDD',
+        'home': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml',
+        'formatter': None,
+        'link': 'http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid={}',
+        'color': '#a24863'
     },
     'M': {
         'name': 'PROSITE profiles',
@@ -81,12 +54,26 @@ MEMBER_DATABASES = {
         'link': 'http://prosite.expasy.org/{}',
         'color': '#60a2d9'
     },
-    'B': {
-        'name': 'SFLD',
-        'home': 'http://sfld.rbvi.ucsf.edu/django/',
-        'formatter': lambda ac: 'family/' + ac[5:] if ac.startwith('SFLDF') else 'superfamily/' + ac[5:] if ac.startwith('SFLDS') else 'subgroup/' + ac[5:],
-        'link': 'http://sfld.rbvi.ucsf.edu/django/{}',
-        'color': '#6175c3'
+    'N': {
+        'name': 'TIGRFAMs',
+        'home': 'http://www.jcvi.org/cgi-bin/tigrfams/index.cgi',
+        'formatter': None,
+        'link': 'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc={}',
+        'color': '#d18dcd'
+    },
+    'P': {
+        'name': 'PROSITE patterns',
+        'home': 'http://prosite.expasy.org/',
+        'formatter': None,
+        'link': 'http://prosite.expasy.org/{}',
+        'color': '#4db395'
+    },
+    'Q': {
+        'name': 'HAMAP',
+        'home': 'http://hamap.expasy.org/',
+        'formatter': None,
+        'link': 'http://hamap.expasy.org/profile/{}',
+        'color': '#e1827a'
     },
     'R': {
         'name': 'SMART',
@@ -95,19 +82,33 @@ MEMBER_DATABASES = {
         'link': 'http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC={}&BLAST=DUMMY',
         'color': '#7e63d7'
     },
+    'U': {
+        'name': 'PIRSF',
+        'home': 'http://pir.georgetown.edu/pirwww/dbinfo/pirsf.shtml',
+        'formatter': None,
+        'link': 'http://pir.georgetown.edu/cgi-bin/ipcSF?id={}',
+        'color': '#d0a242'
+    },
+    'V': {
+        'name': 'PANTHER',
+        'home': 'http://www.pantherdb.org/',
+        'formatter': None,
+        'link': 'http://www.pantherdb.org/panther/family.do?clsAccession={}',
+        'color': '#d04d33'
+    },
+    'X': {
+        'name': 'CATH-Gene3D',
+        'home': 'http://www.cathdb.info/',
+        'formatter': lambda ac: re.match(r'G3DSA:(.+)', ac).group(1),
+        'link': 'http://www.cathdb.info/superfamily/{}',
+        'color': '#da467b'
+    },
     'Y': {
         'name': 'SUPERFAMILY',
         'home': 'http://supfam.org/SUPERFAMILY/',
         'formatter': None,
         'link': 'http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid={}',
         'color': '#90519d'
-    },
-    'N': {
-        'name': 'TIGRFAMs',
-        'home': 'http://www.jcvi.org/cgi-bin/tigrfams/index.cgi',
-        'formatter': None,
-        'link': 'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc={}',
-        'color': '#d18dcd'
     },
     'g': {
         'name': 'MobiDB Lite',
@@ -116,11 +117,50 @@ MEMBER_DATABASES = {
         'link': 'http://mobidb.bio.unipd.it/entries/{}',
         'color': '#c952bc'
     },
+
+    # Structural databases
+    'A': {
+        'name': 'MODBASE',
+        'home': 'http://modbase.compbio.ucsf.edu/modbase-cgi/index.cgi',
+        'formatter': lambda ac: re.match(r'MB_(.+)', ac).group(1),
+        'link': 'http://modbase.compbio.ucsf.edu/modbase-cgi-new/model_search.cgi?searchvalue={}&searchproperties=database_id&displaymode=moddetail&searchmode=default',
+        'color': '#1b9e77'
+    },
+    'b': {
+        'name': 'PDB',
+        'home': 'http://www.ebi.ac.uk/pdbe/',
+        'formatter': None,
+        'link': 'http://www.ebi.ac.uk/pdbe-srv/view/entry/{}/summary',
+        'color': '#d95f02'
+    },
+    'h': {
+        'name': 'CATH',
+        'home': 'http://www.cathdb.info/',
+        'formatter': lambda ac: re.match(r'G3DSA:(.+)', ac).group(1),
+        'link': 'http://www.cathdb.info/superfamily/{}',
+        'color': '#7570b3'
+    },
+    'W': {
+        'name': 'SWISS-MODEL',
+        'home': 'http://swissmodel.expasy.org/',
+        'formatter': lambda ac: re.match(r'SW_(.+)', ac).group(1),
+        'link': 'http://swissmodel.expasy.org/repository/?pid=smr03&query_1_input={}',
+        'color': '#e7298a'
+    },
+    'y': {
+        'name': 'SCOP',
+        'home': 'http://scop.mrc-lmb.cam.ac.uk/scop',
+        'formatter': None,
+        'link': 'http://scop.mrc-lmb.cam.ac.uk/scop/search.cgi?key={}',
+        'color': '#66a61e'
+    },
+
 }
 
 XREF_DATABASES = {
     'EC': 'http://www.ebi.ac.uk/intenz/query?cmd=SearchEC&ec={}',
-    'INTERPRO': '/entry/{}'
+    'INTERPRO': '/entry/{}',
+    'SWISSPROT': 'http://www.uniprot.org/uniprot/{}'
 }
 
 
@@ -206,8 +246,8 @@ def get_entry(entry_ac):
         home = None
         link = None
 
-        if dbcode in MEMBER_DATABASES:
-            db = MEMBER_DATABASES[dbcode]
+        if dbcode in DATABASES:
+            db = DATABASES[dbcode]
             dbname = db['name']
             home = db['home']
 
@@ -351,11 +391,13 @@ def get_entry(entry_ac):
     missing_references = []
     description = ''
     for row in cur:
-        # Trim paragraph tags (<p>, </p>)
-        desc = row[0].lstrip('<p>').rstrip('</p>')
+        desc = row[0]
 
-        # Add back tags
-        desc = '<p>' + desc + '</p>'
+        if desc[:3].lower() != '<p>':
+            desc = '<p>' + desc
+
+        if desc[-4:].lower() != '</p>':
+            desc += '</p>'
 
         # Find references and replace <cite id="PUBXXXX"/> by #PUBXXXX
         for m in re.finditer(r'<cite\s+id="(PUB\d+)"\s*/>', desc):
@@ -372,12 +414,18 @@ def get_entry(entry_ac):
 
             if db in XREF_DATABASES:
                 url = XREF_DATABASES[db].format(_id)
-                xref = '<xref name="{}" url="{}"/>'.format(_id, url)
+                xref = '<a href="{}">{}</a>'.format(url, _id)
             else:
                 entry['missing_xrefs'] += 1
                 xref = '<pre><xref name="{}" url=""/></pre>'.format(_id)
 
             desc = desc.replace(match, xref)
+
+        for m in re.finditer(r'<taxon\s+tax_id="(\d+)">([^<]+)</taxon>', desc):
+            match = m.group(0)
+            tax_id = m.group(1)
+            tax_name = m.group(2)
+            desc = desc.replace(match, '<a href="http://www.uniprot.org/taxonomy/{}">{}</a>'.format(tax_id, tax_name))
 
         description += desc
 
@@ -439,11 +487,6 @@ def get_protein(protein_ac):
         protein_ac=protein_ac
     )
 
-    # if db['formatter'] is None:
-    #     link = db['link'].format(method_ac)
-    # else:
-    #     link = db['link'].format(db['formatter'](method_ac))
-
     entries = {}
     for entry_ac, entry_name, entry_type, method_ac, method_name, pos_from, pos_to, dbcode in cur:
         if entry_ac not in entries:
@@ -455,14 +498,14 @@ def get_protein(protein_ac):
             )
 
         if method_ac not in entries[entry_ac]['signatures']:
-            db = MEMBER_DATABASES[dbcode]
+            db = DATABASES[dbcode]
 
             entries[entry_ac]['signatures'][method_ac] = dict(
                 id=method_ac,
                 name=method_name,
                 db=db['name'],
                 color=db['color'],
-                url=db['link'].format(method_ac) if db['formatter'] is None else db['link'].format(db['formatter'](method_ac)),
+                url=db['link'].format(db['formatter'](method_ac) if db['formatter'] else method_ac),
                 matches=[]
             )
 
@@ -470,6 +513,31 @@ def get_protein(protein_ac):
 
     for entry_ac, entry in entries.items():
         entry['signatures'] = sorted(entry['signatures'].values(), key=lambda x: x['id'])
+
+    # Structural features and predictions
+    cur.execute('SELECT MS.DBCODE, MS.DOMAIN_ID, SC.FAM_ID, MS.POS_FROM, MS.POS_TO '
+                'FROM INTERPRO.MATCH_STRUCT MS '
+                'INNER JOIN INTERPRO.STRUCT_CLASS SC ON MS.DOMAIN_ID=SC.DOMAIN_ID '
+                'WHERE MS.PROTEIN_AC=:protein_ac', protein_ac=protein_ac)
+
+    methods = {}
+    for dbcode, domain_id, fam_id, pos_from, pos_to in cur:
+        db = DATABASES[dbcode]
+
+        if dbcode not in methods:
+            methods[dbcode] = dict(
+                name=db['name'],
+                url=db['home'],
+                color=db['color'],
+                matches=[]
+            )
+
+        methods[dbcode]['matches'].append({
+            'id': fam_id,
+            'url': db['link'].format(db['formatter'](fam_id) if db['formatter'] else fam_id),
+            'from': pos_from,
+            'to': pos_to
+        })
 
     return dict(
         id=protein_ac,
@@ -482,7 +550,8 @@ def get_protein(protein_ac):
             entries.values(),
             # Families, Domains, and Repeats come first, None (Unintegrated) come last
             key=lambda x: {'Family': 0, 'Domain': 1, 'Repeat': 2, None: 99}.get(x['type'], 50)
-        )
+        ),
+        structs=sorted(methods.values(), key=lambda x: x['name'])
     )
 
 
@@ -584,7 +653,15 @@ def api_search():
 
     if m:
         entry_ac = 'IPR{:06d}'.format(int(m.group(1)))
-        entry = get_entry(entry_ac)
+        try:
+            entry = get_entry(entry_ac)
+        except:
+            return jsonify(dict(
+                error=dict(
+                    title='There is a fly in the ointment!',
+                    message='Something went wrong when searching for <strong>{}</strong>. Contact the production team.'.format(entry_ac)
+                )
+            ))
 
         if entry:
             return jsonify(dict(
@@ -595,14 +672,31 @@ def api_search():
 
     entry_ac = method_to_entry(text)
     if entry_ac:
-        entry = get_entry(entry_ac)
+        try:
+            entry = get_entry(entry_ac)
+        except:
+            return jsonify(dict(
+                error=dict(
+                    title='There is a fly in the ointment!',
+                    message='Something went wrong when searching for <strong>{}</strong>. Contact the production team.'.format(text)
+                )
+            ))
+
         return jsonify(dict(
             type='entry',
             url='/signature/' + text,
             entry=entry
         ))
 
-    protein = get_protein(text)
+    try:
+        protein = get_protein(text)
+    except:
+        return jsonify(dict(
+            error=dict(
+                title='There is a fly in the ointment!',
+                message='Something went wrong when searching for <strong>{}</strong>. Contact the production team.'.format(text)
+            )
+        ))
     if protein:
         return jsonify(dict(
             type='protein',
@@ -619,7 +713,10 @@ def api_search():
         ))
 
     return jsonify(dict(
-        error='not_found'
+        error=dict(
+            title='Keep on looking',
+            message='Your search for <strong>{}</strong> did not match any record in the database.'.format(text)
+        )
     ))
 
 
@@ -640,7 +737,10 @@ def api_entry(entry_ac):
         ))
     else:
         return jsonify(dict(
-            error='not_found',
+            error=dict(
+                title='Keep on looking',
+                message='Your search for <strong>{}</strong> did not match any record in the database.'.format(entry_ac)
+            ),
             url='/entry/' + entry_ac
         ))
 
@@ -657,7 +757,10 @@ def api_signature(method_ac):
         ))
     else:
         return jsonify(dict(
-            error='not_found',
+            error=dict(
+                title='Keep on looking',
+                message='Your search for <strong>{}</strong> did not match any record in the database.'.format(method_ac)
+            ),
             url='/signature/' + method_ac
         ))
 
@@ -674,10 +777,12 @@ def api_protein(protein_ac):
         ))
     else:
         return jsonify(dict(
-            error='not_found',
+            error=dict(
+                title='Keep on looking',
+                message='Your search for <strong>{}</strong> did not match any record in the database.'.format(protein_ac)
+            ),
             url='/protein/' + protein_ac
         ))
-
 
 
 if __name__ == '__main__':
