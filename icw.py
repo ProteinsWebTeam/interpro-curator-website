@@ -160,7 +160,8 @@ DATABASES = {
 XREF_DATABASES = {
     'EC': 'http://www.ebi.ac.uk/intenz/query?cmd=SearchEC&ec={}',
     'INTERPRO': '/entry/{}',
-    'SWISSPROT': 'http://www.uniprot.org/uniprot/{}'
+    'SWISSPROT': 'http://www.uniprot.org/uniprot/{}',
+    'CAZY': 'http://www.cazy.org/fam/{}.html',
 }
 
 
@@ -417,6 +418,7 @@ def get_entry(entry_ac):
                 xref = '<a href="{}">{}</a>'.format(url, _id)
             else:
                 entry['missing_xrefs'] += 1
+                print(match)
                 xref = '<pre><xref name="{}" url=""/></pre>'.format(_id)
 
             desc = desc.replace(match, xref)
