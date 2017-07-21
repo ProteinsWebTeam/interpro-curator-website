@@ -331,7 +331,7 @@ def get_entry(entry_ac):
     #
     # entry['go'] = [dict(zip(['id', 'category', 'name'], row)) for row in cur]
 
-    cur.execute('SELECT GT.GO_ID, GT.CATEGORY, GT.NAME '
+    cur.execute('SELECT DISTINCT GT.GO_ID, GT.CATEGORY, GT.NAME '
                 'FROM GO.TERMS@GOAPRO GT '
                 'INNER JOIN ('
                 '  SELECT GS.GO_ID '
@@ -340,10 +340,10 @@ def get_entry(entry_ac):
                 '  ON I2G.GO_ID=GS.SECONDARY_ID '
                 '  WHERE I2G.ENTRY_AC=:entry_ac '
                 '  UNION '
-                '  SELECT GS.GO_ID '
+                '  SELECT GT.GO_ID '
                 '  FROM INTERPRO.INTERPRO2GO I2G '
-                '  INNER JOIN GO.SECONDARIES@GOAPRO GS '
-                '  ON I2G.GO_ID=GS.GO_ID '
+                '  INNER JOIN GO.TERMS@GOAPRO GT '
+                '  ON I2G.GO_ID=GT.GO_ID '
                 '  WHERE I2G.ENTRY_AC=:entry_ac'
                 ') GS '
                 'ON GS.GO_ID = GT.GO_ID', entry_ac=entry_ac)
