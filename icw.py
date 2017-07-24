@@ -162,6 +162,7 @@ XREF_DATABASES = {
     'INTERPRO': '/entry/{}',
     'SWISSPROT': 'http://www.uniprot.org/uniprot/{}',
     'CAZY': 'http://www.cazy.org/fam/{}.html',
+    'PROSITEDOC': 'http://www.expasy.org/cgi-bin/nicedoc.pl?{}'
 }
 
 
