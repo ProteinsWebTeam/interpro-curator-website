@@ -107,21 +107,21 @@ $(function() {
             var ref = references[refID];
 
             content += '<li id="' + ref.id + '">' + ref.authors + ' ' + ref.title + ' <i>' + ref.journal + '</i> ' +
-                ref.year + ';' + ref.volume + ':' + ref.pages + '<div class="level"><div class="level-left">';
-
-            content += '<li id="' + ref.id + '">' + ref.authors + ' ' + ref.title + ' <i>' + ref.journal + '</i> ' +
                 ref.year + ';' + ref.volume + ':' + ref.pages;
 
-            content += '<div class="level"><div class="level-left">';
+            if (ref.doi || ref.pmid) {
+                content += '<div class="level"><div class="level-left">';
 
-            if (ref.doi)
-                content += '<div class="level-item"><a href="' + ref.doi + '" target="_blank">View article <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
+                if (ref.doi)
+                    content += '<div class="level-item"><a href="' + ref.doi + '" target="_blank">View article <span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
 
-            if (ref.pmid)
-                content += '<div class="level-item">PMID:&nbsp;<a href="http://europepmc.org/abstract/MED/' + ref.pmid + '" target="_blank">'+ ref.pmid +'&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
+                if (ref.pmid)
+                    content += '<div class="level-item">PMID:&nbsp;<a href="http://europepmc.org/abstract/MED/' + ref.pmid + '" target="_blank">'+ ref.pmid +'&nbsp;<span class="icon is-small"><i class="fa fa-external-link"></i></span></a></div>';
 
+                content += '</div></div>';
+            }
 
-            content += '</div></div></li>';
+            content += '</li>';
         });
 
         document.getElementById('references-content').innerHTML = content.length ? '<ol>' + content + '</ol>' : '<p>This entry has no references.</p>';

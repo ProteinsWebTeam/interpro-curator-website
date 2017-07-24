@@ -32,8 +32,8 @@
     font-size: .875rem;
 }
 
-#references-content ol > li, #suppl-references ol > li {
-    margin-bottom: 1rem;
+#references-content ol > li, #suppl-references ul > li {
+    margin-bottom: 0.5rem;
 }
 
 #references-content .level, #suppl-references .level {
