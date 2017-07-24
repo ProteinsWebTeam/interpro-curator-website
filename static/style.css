@@ -36,6 +36,10 @@
     margin-bottom: 1rem;
 }
 
+#references-content .level, #suppl-references .level {
+    font-size: .8rem;
+}
+
 .content a, .table a {
     color: #0070bb;
 }
