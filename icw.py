@@ -136,7 +136,7 @@ DATABASES = {
     'h': {
         'name': 'CATH',
         'home': 'http://www.cathdb.info/',
-        'formatter': lambda ac: re.match(r'G3DSA:(.+)', ac).group(1),
+        'formatter': None,
         'link': 'http://www.cathdb.info/superfamily/{}',
         'color': '#7570b3'
     },
@@ -419,7 +419,6 @@ def get_entry(entry_ac):
                 xref = '<a href="{}">{}</a>'.format(url, _id)
             else:
                 entry['missing_xrefs'] += 1
-                print(match)
                 xref = '<pre><xref name="{}" url=""/></pre>'.format(_id)
 
             desc = desc.replace(match, xref)
@@ -693,7 +692,7 @@ def api_search():
 
     try:
         protein = get_protein(text)
-    except:
+    except Exception as e:
         return jsonify(dict(
             error=dict(
                 title='There is a fly in the ointment!',
