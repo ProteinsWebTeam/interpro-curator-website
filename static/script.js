@@ -5,7 +5,7 @@ $(function() {
 
         show: function (rect) {
             this.el.css({
-                top: rect.top - this.el.outerHeight() - 5,
+                top: rect.top - this.el.outerHeight() - 5 + $(document).scrollTop(),
                 left: rect.left + rect.width / 2 - this.el.outerWidth() / 2
             }).show();
             this.active = true;

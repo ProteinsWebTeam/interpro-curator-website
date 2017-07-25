@@ -112,7 +112,7 @@ dl > dd + dt {
     box-shadow: 0 2px 3px rgba(10,10,10,.1),0 0 0 1px rgba(10,10,10,.1);
     padding: .5rem;
     width: 275px;
-    position: fixed;
+    position: absolute;
     display: none;
     z-index: 9999;
 }
