@@ -5,8 +5,8 @@ $(function() {
 
         show: function (rect) {
             this.el.css({
-                top: rect.y - this.el.outerHeight() - 5,
-                left: rect.x + rect.width / 2 - this.el.outerWidth() / 2
+                top: rect.top - this.el.outerHeight() - 5,
+                left: rect.left + rect.width / 2 - this.el.outerWidth() / 2
             }).show();
             this.active = true;
         },
