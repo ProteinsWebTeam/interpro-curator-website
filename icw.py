@@ -158,11 +158,12 @@ DATABASES = {
 }
 
 XREF_DATABASES = {
+    'CAZY': 'http://www.cazy.org/fam/{}.html',
     'EC': 'http://www.ebi.ac.uk/intenz/query?cmd=SearchEC&ec={}',
     'INTERPRO': '/entry/{}',
+    'PROSITEDOC': 'http://www.expasy.org/cgi-bin/nicedoc.pl?{}',
+    'SSF': 'http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid={}',
     'SWISSPROT': 'http://www.uniprot.org/uniprot/{}',
-    'CAZY': 'http://www.cazy.org/fam/{}.html',
-    'PROSITEDOC': 'http://www.expasy.org/cgi-bin/nicedoc.pl?{}'
 }
 
 
