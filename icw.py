@@ -15,7 +15,7 @@ DATABASES = {
     'B': {
         'name': 'SFLD',
         'home': 'http://sfld.rbvi.ucsf.edu/django/',
-        'formatter': lambda ac: 'family/' + ac[5:] if ac.startwith('SFLDF') else 'superfamily/' + ac[5:] if ac.startwith('SFLDS') else 'subgroup/' + ac[5:],
+        'formatter': lambda ac: 'family/' + ac[5:] if ac.startswith('SFLDF') else 'superfamily/' + ac[5:] if ac.startswith('SFLDS') else 'subgroup/' + ac[5:],
         'link': 'http://sfld.rbvi.ucsf.edu/django/{}',
         'color': '#6175c3'
     },
