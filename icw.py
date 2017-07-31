@@ -410,7 +410,7 @@ def get_entry(entry_ac):
             if ref not in references:
                 missing_references.append(ref)
 
-        for m in re.finditer(r'<dbxref\s+db="(\w+)"\s+id="([\w\.]+)"\s*\/>', desc):
+        for m in re.finditer(r'<dbxref\s+db="(\w+)"\s+id="([\w\.\-]+)"\s*\/>', desc):
             match = m.group(0)
             db = m.group(1)
             _id = m.group(2)
