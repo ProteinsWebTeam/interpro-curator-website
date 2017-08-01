@@ -182,19 +182,19 @@ $(function() {
         if (entry.relationships.children.length) {
             content += '<dt>Children</dt>';
             entry.relationships.children.forEach(function (entry) {
-                content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
         if (entry.relationships.containers.length) {
             content += '<dt>Found in</dt>';
             entry.relationships.containers.forEach(function (entry) {
-                content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
         if (entry.relationships.components.length) {
             content += '<dt>Contains</dt>';
             entry.relationships.components.forEach(function (entry) {
-                content += '<dd><a href="/entry'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
+                content += '<dd><a href="/entry/'+ entry.ac +'">' + entry.ac + '</a>&nbsp;' + entry.name + '</dd>';
             });
         }
 
