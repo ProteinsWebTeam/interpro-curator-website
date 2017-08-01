@@ -198,7 +198,7 @@ $(function() {
             });
         }
 
-        document.getElementById('relationships-content').innerHTML = content.length ? '<dl>' + content + '</dl>' : '<p>This entry has no relationships (but do well on its own).</p>';
+        document.getElementById('relationships-content').innerHTML = content.length ? '<dl>' + content + '</dl>' : '<p>This entry has no relationships.</p>';
 
         // GO terms block
         var goTerms = {
