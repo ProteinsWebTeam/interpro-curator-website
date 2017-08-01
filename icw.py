@@ -376,7 +376,11 @@ def get_entry(entry_ac):
                 "  UNION "
                 "  SELECT PDB.PUB_ID "
                 "  FROM INTERPRO.PDB_PUB_ADDITIONAL PDB "
-                "  WHERE PDB.ENTRY_AC = :entry_ac"
+                "  WHERE PDB.ENTRY_AC = :entry_ac "
+                "  UNION "
+                "  SELECT SUPREF.PUB_ID "
+                "  FROM INTERPRO.SUPPLEMENTARY_REF SUPREF "
+                "  WHERE SUPREF.ENTRY_AC = :entry_ac"
                 ")", entry_ac=entry_ac)
 
     references = {row[0]: dict(zip(
