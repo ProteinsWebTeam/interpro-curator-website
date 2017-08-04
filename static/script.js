@@ -81,11 +81,15 @@ $(function() {
             content = [];
 
             arr[1].split(',').forEach(function (refID) {
+                refID = refID.trim();
                 if (references.hasOwnProperty(refID)) {
-                    if (orderedRefs.indexOf(refID) === -1)
+                    var i = orderedRefs.indexOf(refID);
+                    if (i === -1) {
+                        i = orderedRefs.length;
                         orderedRefs.push(refID);
+                    }
 
-                    content.push('<a href="#' + refID + '">' + orderedRefs.length + '</a>')
+                    content.push('<a href="#' + refID + '">' + (i + 1) + '</a>')
                 }
             });
 
