@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import re
 
 import cx_Oracle
@@ -161,6 +162,7 @@ XREF_DATABASES = {
     'CAZY': 'http://www.cazy.org/fam/{}.html',
     'EC': 'http://www.ebi.ac.uk/intenz/query?cmd=SearchEC&ec={}',
     'INTERPRO': '/entry/{}',
+    'PFAM': 'http://pfam.xfam.org/family/{}',
     'PROSITEDOC': 'http://www.expasy.org/cgi-bin/nicedoc.pl?{}',
     'SSF': 'http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid={}',
     'SWISSPROT': 'http://www.uniprot.org/uniprot/{}',
@@ -419,14 +421,14 @@ def get_entry(entry_ac):
             db = m.group(1)
             _id = m.group(2)
 
-            if db in XREF_DATABASES:
+            try:
                 url = XREF_DATABASES[db].format(_id)
                 xref = '<a href="{}">{}</a>'.format(url, _id)
-            else:
+            except KeyError:
                 entry['missing_xrefs'] += 1
-                xref = '<pre><xref name="{}" url=""/></pre>'.format(_id)
-
-            desc = desc.replace(match, xref)
+                xref = '<pre>{}</pre>'.format(json.dumps(dict(db=db, id=_id)))
+            finally:
+                desc = desc.replace(match, xref)
 
         for m in re.finditer(r'<taxon\s+tax_id="(\d+)">([^<]+)</taxon>', desc):
             match = m.group(0)
