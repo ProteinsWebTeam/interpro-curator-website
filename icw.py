@@ -238,7 +238,7 @@ def get_entry(entry_ac):
     cur.execute("SELECT M.DBCODE, M.METHOD_AC, M.NAME, NVL(MM.PROTEIN_COUNT, 0) "
                 "FROM INTERPRO.METHOD M "
                 "INNER JOIN INTERPRO.ENTRY2METHOD E2M ON M.METHOD_AC = E2M.METHOD_AC "
-                "RIGHT OUTER JOIN INTERPRO.MV_METHOD_MATCH MM ON M.METHOD_AC = MM.METHOD_AC "
+                "LEFT OUTER JOIN INTERPRO.MV_METHOD_MATCH MM ON M.METHOD_AC = MM.METHOD_AC "
                 "WHERE E2M.ENTRY_AC = :entry_ac ORDER BY M.METHOD_AC", entry_ac=entry_ac)
 
     for row in cur:
