@@ -61,13 +61,15 @@ $(function() {
             el.href = el.getAttribute('data-href-entry') + entry.id;
         });
 
-        document.querySelectorAll('#curation-content a[data-href-signatures]').forEach(function (el) {
-            var signatures = [];
-            entry.signatures.forEach(function (s) {
-                signatures.push(s.method_ac);
-            });
+        var signatures = [];
+        entry.signatures.forEach(function (s) {
+            signatures.push(s.method_ac);
+        });
+        signatures = signatures.join(',');
 
-            el.href = el.getAttribute('data-href-signatures') + signatures.join(',');
+        document.getElementById('hh-descriptions').href = happyHelperRoot + "/interpro/curation/comparisons/compare-signature-protein-description.jelly?db=S&features=" + signatures;
+        document.querySelectorAll('#curation-content a[data-href-signatures]').forEach(function (el) {
+            el.href = el.getAttribute('data-href-signatures') + signatures;
         });
 
         // Description block
