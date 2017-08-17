@@ -310,6 +310,12 @@
     {%  else %}
         var search = null;
     {% endif %}
+
+    {% if happy_helper_root %}
+        var happyHelperRoot = "{{ happy_helper_root }}";
+    {% else %}
+        var happyHelperRoot = null;
+    {% endif %}
 </script>
 </body>
 </html>

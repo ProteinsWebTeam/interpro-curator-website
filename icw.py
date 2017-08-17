@@ -3,6 +3,8 @@
 
 import json
 import re
+import urllib.request
+from datetime import datetime
 
 import cx_Oracle
 from flask import Flask, g, jsonify, render_template, request
@@ -189,6 +191,38 @@ def method_to_entry(method_ac):
 
     row = cur.fetchone()
     return row[0] if row is not None else row
+
+
+def select_db_account():
+    # Selects the most up-to-date account for Happy Helper.
+    # todo: if loaded dates are equal, compare match dates, then performances
+    try:
+        req = urllib.request.urlopen('http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro/interpro/curation/summary-json.jelly')
+        data = req.read().decode().strip().replace('\n', '').replace('\'', '"')
+        summary = json.loads(data)
+    except json.JSONDecodeError:
+        loaded = None
+    else:
+        loaded = datetime.strptime(summary['Data loaded'], '%Y-%m-%d %H:%M:%S')
+
+    try:
+        req = urllib.request.urlopen('http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load/interpro/curation/summary-json.jelly')
+        data = req.read().decode().strip().replace('\n', '').replace('\'', '"')
+        summary_load = json.loads(data)
+    except json.JSONDecodeError:
+        loaded_load = None
+    else:
+        loaded_load = datetime.strptime(summary_load['Data loaded'], '%Y-%m-%d %H:%M:%S')
+
+    if loaded and loaded_load:
+        if loaded < loaded_load:
+            return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load'
+        else:
+            return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro'
+    elif loaded_load:
+        return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load'
+    else:
+        return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro'
 
 
 def get_entry(entry_ac):
@@ -627,17 +661,18 @@ def close_db(error):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', happy_helper_root=select_db_account())
 
 
 @app.route('/entry/<entry_ac>/')
 def entry_page(entry_ac):
-    return render_template('index.html', entry_ac=entry_ac)
+    return render_template('index.html', entry_ac=entry_ac, happy_helper_root=select_db_account())
 
 
 @app.route('/signature/<method_ac>/')
 def signature_page(method_ac):
-    return render_template('index.html', method_ac=method_ac)
+    return render_template('index.html', method_ac=method_ac, happy_helper_root=select_db_account())
+
 
 @app.route('/protein/<protein_ac>/')
 def protein_page(protein_ac):
