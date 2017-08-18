@@ -181,6 +181,15 @@ def open_db():
     return g.oracle_db
 
 
+def method_to_protein(method_ac):
+    cur = open_db().cursor()
+    cur.execute('SELECT COUNT(*) '
+                'FROM INTERPRO.MV_METHOD2PROTEIN '
+                'WHERE METHOD_AC=:method_ac '
+                'GROUP BY METHOD_AC', method_ac=method_ac)
+    return cur.fetchone()[0]
+
+
 def method_to_entry(method_ac):
     cur = open_db().cursor()
     cur.execute('SELECT E2M.ENTRY_AC '
@@ -703,7 +712,8 @@ def api_search():
             return jsonify(dict(
                 error=dict(
                     title='There is a fly in the ointment!',
-                    message='Something went wrong when searching for <strong>{}</strong>. Contact the production team.'.format(entry_ac)
+                    message='Something went wrong when searching for <strong>{}</strong>. '
+                            'Contact the production team.'.format(entry_ac)
                 )
             ))
 
@@ -722,7 +732,8 @@ def api_search():
             return jsonify(dict(
                 error=dict(
                     title='There is a fly in the ointment!',
-                    message='Something went wrong when searching for <strong>{}</strong>. Contact the production team.'.format(text)
+                    message='Something went wrong when searching for <strong>{}</strong>. '
+                            'Contact the production team.'.format(text)
                 )
             ))
 
@@ -732,13 +743,24 @@ def api_search():
             entry=entry
         ))
 
+    cnt = method_to_protein(text)
+    if cnt:
+        return jsonify(dict(
+            error=dict(
+                title='Unintegrated signature',
+                message='Signature <strong>{}</strong> matches {} proteins '
+                        'but is not associated with any InterPro entry.'.format(text, cnt)
+            )
+        ))
+
     try:
         protein = get_protein(text)
     except Exception as e:
         return jsonify(dict(
             error=dict(
                 title='There is a fly in the ointment!',
-                message='Something went wrong when searching for <strong>{}</strong>. Contact the production team.'.format(text)
+                message='Something went wrong when searching for <strong>{}</strong>. '
+                        'Contact the production team.'.format(text)
             )
         ))
     if protein:
@@ -797,6 +819,17 @@ def api_signature(method_ac):
         return jsonify(dict(
             type='entry',
             entry=entry,
+            url='/signature/' + method_ac
+        ))
+
+    cnt = method_to_protein(method_ac)
+    if cnt:
+        return jsonify(dict(
+            error=dict(
+                title='Unintegrated signature',
+                message='Signature <strong>{}</strong> matches {} proteins '
+                        'but is not associated with any InterPro entry.'.format(method_ac, cnt),
+            ),
             url='/signature/' + method_ac
         ))
     else:
