@@ -185,8 +185,8 @@ def method_to_protein(method_ac):
     cur = open_db().cursor()
     cur.execute('SELECT COUNT(*) '
                 'FROM INTERPRO.MV_METHOD2PROTEIN '
-                'WHERE METHOD_AC=:method_ac '
-                'GROUP BY METHOD_AC', method_ac=method_ac)
+                'WHERE METHOD_AC=:method_ac',
+                method_ac=method_ac)
     return cur.fetchone()[0]
 
 
