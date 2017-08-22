@@ -162,12 +162,18 @@ DATABASES = {
 
 XREF_DATABASES = {
     'CAZY': 'http://www.cazy.org/fam/{}.html',
+    'COG': 'http://www.ncbi.nlm.nih.gov/COG/new/release/cow.cgi?cog={}',
     'EC': 'http://www.ebi.ac.uk/intenz/query?cmd=SearchEC&ec={}',
+    'GENPROP': 'http://cmr.jcvi.org/cgi-bin/CMR/shared/GenomePropDefinition.cgi?prop_acc={}',
     'INTERPRO': '/entry/{}',
+    'PDBE': 'http://www.ebi.ac.uk/pdbe/entry/pdb/{}',
     'PFAM': 'http://pfam.xfam.org/family/{}',
+    'PIRSF': 'http://pir.georgetown.edu/cgi-bin/ipcSF?id={}',
+    'PROSITE': 'http://www.isrec.isb-sib.ch/cgi-bin/get_qdoc?{}',
     'PROSITEDOC': 'http://www.expasy.org/cgi-bin/nicedoc.pl?{}',
     'SSF': 'http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid={}',
     'SWISSPROT': 'http://www.uniprot.org/uniprot/{}',
+    'TIGRFAMS': 'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc={}'
 }
 
 
@@ -282,7 +288,8 @@ def get_entry(entry_ac):
                 "FROM INTERPRO.METHOD M "
                 "INNER JOIN INTERPRO.ENTRY2METHOD E2M ON M.METHOD_AC = E2M.METHOD_AC "
                 "LEFT OUTER JOIN INTERPRO.MV_METHOD_MATCH MM ON M.METHOD_AC = MM.METHOD_AC "
-                "WHERE E2M.ENTRY_AC = :entry_ac ORDER BY M.METHOD_AC", entry_ac=entry_ac)
+                "WHERE E2M.ENTRY_AC = :entry_ac "
+                "ORDER BY M.METHOD_AC", entry_ac=entry_ac)
 
     for row in cur:
         dbcode = row[0]
@@ -461,7 +468,7 @@ def get_entry(entry_ac):
 
         for m in re.finditer(r'<dbxref\s+db="(\w+)"\s+id="([\w\.\-]+)"\s*\/>', desc):
             match = m.group(0)
-            db = m.group(1)
+            db = m.group(1).upper()
             _id = m.group(2)
 
             try:
