@@ -131,6 +131,12 @@ dl > dd + dt {
     font-size: .9rem;
 }
 
+#tooltip > .delete {
+    position: absolute;
+    right: 0.5em;
+    top: 0.5em;
+}
+
 #protein-organism {
     font-style: italic;
 }

@@ -16,12 +16,13 @@ $(function() {
                 this.el.hide();
         },
 
-        hide: function () {
+        hide: function (delay) {
+            if (delay === undefined) delay = 500;
             this.active = false;
             var self = this;
             setTimeout(function () {
                 self._hide();
-            }, 500);
+            }, delay);
         },
 
         update: function (fromPos, toPos, sId, sName, sURL, dbName) {
@@ -39,6 +40,9 @@ $(function() {
 
             this.el.on('mouseleave', function () {
                 self.hide();
+            });
+            this.el.on('click', '.delete', function () {
+                self.hide(0);
             });
         }
     };
