@@ -209,36 +209,43 @@ def method_to_entry(method_ac):
     return row[0] if row is not None else row
 
 
-def select_db_account():
-    # Selects the most up-to-date account for Happy Helper.
-    # todo: if loaded dates are equal, compare match dates, then performances
+def get_db_account_info(url):
+    summary = dict()
     try:
-        req = urllib.request.urlopen('http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro/interpro/curation/summary-json.jelly')
+        req = urllib.request.urlopen(url)
         data = req.read().decode().strip().replace('\n', '').replace('\'', '"')
         summary = json.loads(data)
-    except json.JSONDecodeError:
-        loaded = None
-    else:
-        loaded = datetime.strptime(summary['Data loaded'], '%Y-%m-%d %H:%M:%S')
+    except (json.JSONDecodeError, urllib.request.URLError):
+        pass
+    finally:
+        return summary
+
+
+def select_db_account():
+    url1 = 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro'
+    url2 = 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load'
+
+    summary1 = get_db_account_info('http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro/interpro/curation/summary-json.jelly')
+    summary2 = get_db_account_info('http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load/interpro/curation/summary-json.jelly')
 
     try:
-        req = urllib.request.urlopen('http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load/interpro/curation/summary-json.jelly')
-        data = req.read().decode().strip().replace('\n', '').replace('\'', '"')
-        summary_load = json.loads(data)
-    except json.JSONDecodeError:
-        loaded_load = None
-    else:
-        loaded_load = datetime.strptime(summary_load['Data loaded'], '%Y-%m-%d %H:%M:%S')
+        loaded1 = datetime.strptime(summary1['Data loaded'], '%Y-%m-%d %H:%M:%S')
+    except (KeyError, ValueError):
+        loaded1 = None
 
-    if loaded and loaded_load:
-        if loaded < loaded_load:
-            return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load'
-        else:
-            return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro'
-    elif loaded_load:
-        return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro-load'
+    try:
+        loaded2 = datetime.strptime(summary2['Data loaded'], '%Y-%m-%d %H:%M:%S')
+    except (KeyError, ValueError):
+        loaded2 = None
+
+    # Selects the most up-to-date account for Happy Helper.
+    # todo: if loaded dates are equal, compare match dates, then performances
+    if loaded1 and loaded2:
+        return url2 if loaded1 < loaded2 else url1
+    elif loaded1:
+        return url1
     else:
-        return 'http://www.ebi.ac.uk/internal-tools/openSQL/view,account:happy-helper-ippro'
+        return loaded2
 
 
 def get_entry(entry_ac):
