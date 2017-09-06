@@ -267,7 +267,27 @@ def get_entry(entry_ac):
     row = cur.fetchone()
 
     if not row:
-        return None
+        cur.execute("SELECT DISTINCT "
+                    "  E.NAME, "
+                    "  E.SHORT_NAME, "
+                    "  ET.ABBREV, "
+                    "  E.CHECKED, "
+                    "  (SELECT COUNT(*) FROM INTERPRO.MV_ENTRY2PROTEIN MVEP WHERE MVEP.ENTRY_AC = :entry_ac),"
+                    "  E.CREATED,"
+                    "  E.TIMESTAMP, "
+                    "  E.ENTRY_AC "
+                    "FROM INTERPRO.ENTRY E "
+                    "INNER JOIN INTERPRO.CV_ENTRY_TYPE ET "
+                    "ON E.ENTRY_TYPE = ET.CODE "
+                    "LEFT OUTER JOIN INTERPRO.MV_ENTRY_MATCH EM ON E.ENTRY_AC = EM.ENTRY_AC "
+                    "INNER JOIN INTERPRO.MV_SECONDARY S ON E.ENTRY_AC = S.ENTRY_AC "
+                    "WHERE S.SECONDARY_AC = :entry_ac ", entry_ac=entry_ac)
+
+        row = cur.fetchone()
+        if not row:
+            return None
+
+        entry_ac = row[7]
 
     entry = {
         'id': entry_ac,
@@ -632,6 +652,74 @@ def is_protein(protein_ac):
     return row[0] if row else None
 
 
+def live_search(terms):
+    cur = open_db().cursor()
+
+    entries = set()
+
+    for i, term in enumerate(terms):
+        params = dict(
+            term=term,
+            pattern='(^|\s|\W){}($|\s|\W)'.format(term)
+        )
+
+        cur.execute('''
+              SELECT ENTRY_AC
+              FROM INTERPRO.ENTRY
+              WHERE REGEXP_LIKE(NAME, :pattern, 'i')
+              UNION
+              SELECT E.ENTRY_AC
+              FROM INTERPRO.ENTRY E
+              INNER JOIN INTERPRO.ENTRY2METHOD EM ON E.ENTRY_AC = EM.ENTRY_AC
+              INNER JOIN INTERPRO.METHOD M ON EM.METHOD_AC = M.METHOD_AC
+              WHERE REGEXP_LIKE(M.NAME, :pattern, 'i')
+              UNION
+              SELECT E.ENTRY_AC
+              FROM INTERPRO.ENTRY E
+              INNER JOIN INTERPRO.ENTRY2COMMON EC ON E.ENTRY_AC = EC.ENTRY_AC
+              INNER JOIN INTERPRO.COMMON_ANNOTATION C ON EC.ANN_ID = C.ANN_ID
+              WHERE REGEXP_LIKE(C.NAME, :pattern, 'i') OR REGEXP_LIKE(C.TEXT, :pattern, 'i')
+              UNION
+              SELECT DISTINCT E.ENTRY_AC
+              FROM INTERPRO.ENTRY E
+              INNER JOIN INTERPRO.INTERPRO2GO IG ON E.ENTRY_AC = IG.ENTRY_AC
+              INNER JOIN (
+                SELECT GT.GO_ID
+                FROM GO.TERMS@GOAPRO GT
+                WHERE GT.GO_ID = :term OR regexp_like(GT.NAME, :pattern, 'i')
+                UNION
+                SELECT GS.SECONDARY_ID AS GO_ID
+                FROM GO.SECONDARIES@GOAPRO GS
+                INNER JOIN GO.TERMS@GOAPRO GT ON GT.GO_ID = GS.GO_ID
+                WHERE GS.GO_ID = :term
+              ) G ON IG.GO_ID = G.GO_ID
+        ''', **params)
+
+        s = set([row[0] for row in cur])
+
+        if not i:
+            entries = s
+        else:
+            entries &= s
+
+    if not entries:
+        return []
+
+    entries = list(entries)
+    cur.execute(
+        '''
+        SELECT E.ENTRY_AC, E.NAME, T.ABBREV
+        FROM INTERPRO.ENTRY E
+        INNER JOIN INTERPRO.CV_ENTRY_TYPE T ON E.ENTRY_TYPE = T.CODE
+        WHERE E.ENTRY_AC IN ({})
+        ORDER BY E.ENTRY_AC
+        '''.format(','.join([':' + str(i + 1) for i in range(len(entries))])),
+        entries
+    )
+
+    return [dict(zip(['id', 'name', 'type'], row)) for row in cur]
+
+
 def search_entries(terms, fields=['abstract', 'common', 'entry', 'go', 'method', 'publication', 'xref']):
     cur = open_db().cursor()
 
@@ -669,7 +757,7 @@ def search_entries(terms, fields=['abstract', 'common', 'entry', 'go', 'method',
             ' OR '.join(term_cond)
         ), params)
 
-    return cur.fetchall()
+    return [dict(zip(['id', 'name', 'type'], row)) for row in cur]
 
 
 @app.errorhandler(404)
@@ -770,7 +858,7 @@ def api_search():
 
     try:
         protein = get_protein(text)
-    except Exception as e:
+    except:
         return jsonify(dict(
             error=dict(
                 title='There is a fly in the ointment!',
@@ -778,6 +866,7 @@ def api_search():
                         'Contact the production team.'.format(text)
             )
         ))
+
     if protein:
         return jsonify(dict(
             type='protein',
@@ -785,12 +874,13 @@ def api_search():
             protein=protein
         ))
 
+    #entries = live_search(text.split())
     entries = search_entries(text.split())
     if entries:
         return jsonify(dict(
             type='entries',
             url='/search?q="{}"'.format(text),
-            entries=[dict(zip(['id', 'name', 'type'], e)) for e in entries]
+            entries=entries
         ))
 
     return jsonify(dict(
