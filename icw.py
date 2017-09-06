@@ -245,7 +245,7 @@ def select_db_account():
     elif loaded1:
         return url1
     else:
-        return loaded2
+        return url2
 
 
 def get_entry(entry_ac):
