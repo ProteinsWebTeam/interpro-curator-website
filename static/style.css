@@ -1,3 +1,13 @@
+html {
+    /*
+        Override Bulma's default behaviour:
+            overflow-x: hidden;
+            overflow-y: scroll;
+        which breaks the sticky aside menu
+    */
+    overflow: visible;
+}
+
 .hero {
     background-color: #008080;
     color: #fff;
@@ -139,4 +149,9 @@ dl > dd + dt {
 
 #protein-organism {
     font-style: italic;
+}
+
+#menu {
+    position: sticky;
+    top: .75rem;
 }
