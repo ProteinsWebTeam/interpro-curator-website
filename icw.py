@@ -552,16 +552,16 @@ def get_entry(entry_ac):
 def get_protein(protein_ac):
     cur = open_db().cursor()
 
-    cur.execute('SELECT P.NAME, P.LEN, P.DBCODE, P.TAX_ID, E.SCIENTIFIC_NAME '
+    cur.execute('SELECT PROTEIN_AC, P.NAME, P.LEN, P.DBCODE, P.TAX_ID, E.SCIENTIFIC_NAME '
                 'FROM INTERPRO.PROTEIN P '
                 'LEFT OUTER JOIN INTERPRO.ETAXI E ON P.TAX_ID=E.TAX_ID '
-                'WHERE PROTEIN_AC = :protein_ac', protein_ac=protein_ac)
+                'WHERE LOWER(PROTEIN_AC) = :protein_ac', protein_ac=protein_ac.lower())
 
     row = cur.fetchone()
     if not row:
         return None
 
-    prot_name, prot_length, prot_db, prot_taxid, sci_name = row
+    protein_ac, prot_name, prot_length, prot_db, prot_taxid, sci_name = row
 
     cur.execute(
         'SELECT E.ENTRY_AC, E.NAME, CET.ABBREV, MA.METHOD_AC, ME.NAME, MA.POS_FROM, MA.POS_TO, MA.DBCODE '
