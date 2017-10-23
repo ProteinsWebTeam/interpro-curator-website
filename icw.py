@@ -555,7 +555,7 @@ def get_protein(protein_ac):
     cur.execute('SELECT PROTEIN_AC, P.NAME, P.LEN, P.DBCODE, P.TAX_ID, E.SCIENTIFIC_NAME '
                 'FROM INTERPRO.PROTEIN P '
                 'LEFT OUTER JOIN INTERPRO.ETAXI E ON P.TAX_ID=E.TAX_ID '
-                'WHERE LOWER(PROTEIN_AC) = :protein_ac', protein_ac=protein_ac.lower())
+                'WHERE PROTEIN_AC = :protein_ac', protein_ac=protein_ac.upper())
 
     row = cur.fetchone()
     if not row:
