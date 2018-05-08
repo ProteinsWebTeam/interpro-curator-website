@@ -1,3 +1,7 @@
+# :warning: deprecated
+
+The curator website has been merged with [Pronto](https://github.com/ProteinsWebTeam/pronto), therefore this repository is unmaintained.
+
 # InterPro curator website
 
 The repository contains the code for the website that aims to replace the curator version of the InterPro 5.1 website.
